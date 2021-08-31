@@ -4,6 +4,8 @@ const process = require("process")
 const envFile = require('dotenv').config()
 const env = envFile.parsed
 const config = require('./config.json');
+var Filter = require('bad-words')
+const googleTTS = require('google-tts-api')
 
 //nieuwe bullshit van discord js v13
 const myIntents = new discord.Intents();
@@ -40,7 +42,7 @@ client.on("messageCreate", async (msg) => {
 })
 
 async function say(msg, args, command, curPrefix) {
-    command = msg.cleanContent.replace(/@/g, '').replace(/#/g, '').substr(0, curprefix.length)
+    var text = args.join(" ")
     var Connection
     if (msg.guild.me.voice.channel) {
         await msg.guild.me.voice.channel.join().then(connection => {
@@ -56,10 +58,29 @@ async function say(msg, args, command, curPrefix) {
     // lengte moet meer dan 0 zijn en minder dan 200
     if (text.length == 0) {
         msg.channel.send("You need to add a message for me to say.")
-      } else if (text.length >= 200) {
+    } else if (text.length >= 200) {
         msg.channel.send("Can`t say message because the length is " + text.length + " while the maximum is 199")
-      }
-    var sayMessage = args.join(" ")
+    }
+    if (!/[a-z]/.test(text) && /[A-Z]/.test(text)) {
+        var volume = 10
+    } else {
+        var volume = 2.5
+    }
+    //filter n-word
+    var filter = new Filter({ emptyList: true, list: ["nigga", "nig", "neigha", "niega", "niegha", "neiga", "niger", "nigger"], placeHolder: "\u200B" })
+    var oldText = text
+    text = filter.clean(text.toLowerCase())
+    if (oldText !== text) {
+        msg.delete()
+    }
+    //
+    const url = googleTTS.getAudioUrl(text, {
+        lang: TextLanguage,
+        slow: false,
+        host: 'https://translate.google.com',
+    })
+    var dispatcher = connection.play(url)
+    dispatcher.setVolume(volume)
 }
 
 client.login(env.discord_token)
