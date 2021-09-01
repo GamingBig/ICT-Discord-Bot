@@ -16,6 +16,10 @@ client.on("ready", () => {
     console.log("Logged in as: " + client.user.tag)
 })
 
+client.on('guildMemberAdd', (guildMember) => {
+    guildMember.roles.add(guildMember.guild.roles.cache.find(role => role.name === "Standaard rol"));
+});
+
 client.on("messageCreate", async (msg) => {
     if (msg.member.user == client.user) { return }
     var curPrefix = config.prefix[msg.guildId]
@@ -35,9 +39,23 @@ client.on("messageCreate", async (msg) => {
         fs.writeFileSync("config.json", JSON.stringify(config))
         curPrefix = args[0]
         msg.channel.send("The prefix is now: `" + curPrefix + "`")
-    }
-    if (command == "say") {
+    } else if (command == "say") {
         say(msg, args, command, curPrefix)
+    } else if (command == "nick" || command == "nick") {
+        if (!args[0]) {
+            return msg.channel.send("You did not specify a nickname.")
+        }
+        if (!msg.member.nickname.includes("(") && !args.join(" ").includes("(")) {
+            msg.member.setNickname(args.join(" "))
+            msg.channel.send("Your nickname is now: `" + args.join(" ") + "`\n\nPlease add your real name to your nickname like this: `XX_SniperKiller_XX (Karel)`.")
+            return
+        }
+        var oldName = msg.member.nickname
+        var newName = args.join(" ")
+        newName = newName.replace(/( \(unde)\w+/g, "")
+        await msg.member.setNickname(newName)
+        msg.channel.send("Your nickname is now: `" + newName + "`")
+        msg.guild.me.voice
     }
 })
 
