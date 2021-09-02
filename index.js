@@ -10,6 +10,8 @@ const disvoice = require('@discordjs/voice');
 const { Routes } = require('discord-api-types/v9');
 const { REST } = require('@discordjs/rest');
 const rest = new REST({ version: '9' }).setToken(env.discord_token);
+var userSettings = require("./UserSettings.json")
+var toHex = require('colornames')
 
 //help command setup
 var getClosest = require("get-closest");
@@ -48,8 +50,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     if (!oldState.guild.me.voice || !oldState.guild.me.voice.channel) {
         return
     }
-    if (oldState.channel !== null && newState.channel === null) {
-        var memberArray = oldState.guild.me.voice.channel.members
+    if (oldState.member.voice.channel !== null && newState.member.voice.channel === null) {
+        var memberArray = oldState.member.voice.channel.members
         var realMemberArray = []
         memberArray.array().forEach(element => {
             if (element.user.bot == false) {
@@ -68,6 +70,18 @@ client.on('guildMemberAdd', (guildMember) => {
 });
 
 client.on("messageCreate", async (msg) => {
+    var user = msg.member
+    if (!userSettings[user.id]) {
+        userSettings[user.id] = {}
+    }
+    if (!userSettings[user.id].role) {
+        var userRole = await msg.guild.roles.create({ name: user.displayName, position: 0 })
+        user.roles.add(userRole)
+        var curUserSettings = userSettings[user.id]
+        curUserSettings.role = userRole.id
+        await fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+        userSettings = require("./UserSettings.json")
+    }
     if (msg.member.user == client.user) { return }
     var curPrefix = config.prefix[msg.guildId]
     if (!curPrefix) { config.prefix[msg.guildId] = "!"; fs.writeFileSync("config.json", JSON.stringify(config)); config = require("config.json") }
@@ -126,6 +140,9 @@ client.on("messageCreate", async (msg) => {
         }
         msg.channel.send("Pong! " + Math.round(Math.abs(curDate - msgDate) / 10) + "ms")
     } else /*Prefix command*/ if (command == "prefix") {
+        if(msg.member.permissions.has(discord.Permissions.FLAGS.ADMINISTRATOR)){
+            return msg.channel.send("You don't have permission to change the prefix.")
+        }
         if (!args[0]) {
             return msg.channel.send("You did not specify a prefix.\nThe prefix for this server is :`" + curPrefix + "`")
         }
@@ -133,7 +150,7 @@ client.on("messageCreate", async (msg) => {
         fs.writeFileSync("config.json", JSON.stringify(config))
         curPrefix = args[0]
         msg.channel.send("The prefix is now: `" + curPrefix + "`")
-    } else /*Nickname command*/ if (command == "nick" || command == "nick") {
+    } else /*Nickname command*/ if (command == "nick") {
         if (!args[0]) {
             return msg.channel.send("You did not specify a nickname.")
         }
@@ -166,6 +183,36 @@ client.on("messageCreate", async (msg) => {
         var joeryUser = client.users.cache.find(({ id }) => id == "255730583655809025")
         joeryUser.send({ embeds: [embed] })
         msg.channel.send("Suggestion sent to " + joeryUser.username + ".")
+    } else /*Role commands */ if (command == "role") {
+        var subCommand = args[0]
+        if (!subCommand) {
+            return msg.channel.send("Please say what you want to change about your role.\nUse `" + curPrefix + "role color` to change the color and `" + curPrefix + "role name` to change the name.")
+        }
+        try {
+            var userRole = userSettings[msg.member.id].role
+            userRole = await msg.guild.roles.fetch(userRole)
+        } catch (error) { return msg.channel.send("Something went wrong trying to get your role.") }
+        if (subCommand == "color") {
+            try {
+                if (/^#[0-9A-F]{6}$/i.test(args[1])) {
+                    var color = args[1]
+                } else {
+                    var color = toHex(args[1])
+                }
+                userRole.setColor(color)
+            } catch {
+                msg.channel.send("That is not a valid color, if a color name doesnt work please input a [hex](https://www.google.com/search?q=color+picker) code.")
+            }
+        } else if (subCommand == "name") {
+            try {
+                var name = args.slice(1, args.length).join(" ")
+                userRole.setName(name)
+                userRole.setHoist(true)
+            } catch (error) {
+                console.log(error)
+                msg.channel.send("Something went wrong.")
+            }
+        }
     } else /*Find command the user meant */ {
         /*Voice commands handled seperatly for readability */
         if (await voiceCommand(msg, command, curPrefix, args) == true) { return }

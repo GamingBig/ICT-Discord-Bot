@@ -16,6 +16,7 @@
         "Prefix": "Change the server prefix."
     },
     "User": {
-        "Nick": "Allows you to set your nickname."
+        "Nick": "Allows you to set your nickname.",
+        "Role": "Allows youto use `role color` to change the color of your role and `role name` to change the name."
     }
 }
