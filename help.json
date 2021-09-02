@@ -1,15 +1,21 @@
 {
     "Catagories": {
         "Voice": "Voice commands.",
-        "Bot": "Bot management commands."
+        "Bot": "Bot management commands.",
+        "User": "User control commands."
     },
     "Voice": {
         "Join": "Join the VC you are currently in.",
-        "Leave": "Leave voice channel."
+        "Leave": "Leave voice channel.",
+        "Say": "Make the bot say stuff."
     },
     "Bot": {
         "Ping": "Measure the ping",
         "Help": "It would be kinda weird to explain what the help command is... You're using it",
-        "Suggestion": "Allows you to suggest a feature or report a bug directly to the developer (Joery)."
+        "Suggestion": "Allows you to suggest a feature or report a bug directly to the developer (Joery).",
+        "Prefix": "Change the server prefix."
+    },
+    "User": {
+        "Nick": "Allows you to set your nickname."
     }
 }

@@ -6,8 +6,10 @@ const env = envFile.parsed
 const config = require('./config.json');
 var Filter = require('bad-words')
 const googleTTS = require('google-tts-api')
-const disbut = require("discord-buttons");
 const disvoice = require('@discordjs/voice');
+const { Routes } = require('discord-api-types/v9');
+const { REST } = require('@discordjs/rest');
+const rest = new REST({ version: '9' }).setToken(env.discord_token);
 
 //help command setup
 var getClosest = require("get-closest");
@@ -15,6 +17,10 @@ const levenshtein = require("levenshtein")
 const helpJSON = require("./help.json")
 var commands = []
 const players = {}
+
+//there are better ways of doing this but i already have it coded out so idc
+var didYouMeanVal = null
+var buttonBuffer = null
 
 Object.keys(helpJSON).forEach((value, i) => {
     if (value == "Catagories") {
@@ -39,7 +45,7 @@ client.on("ready", () => {
 
 //leave when other have left
 client.on('voiceStateUpdate', (oldState, newState) => {
-    if (!oldState.guild.voice || !oldState.guild.voice.channel) {
+    if (!oldState.guild.me.voice || !oldState.guild.me.voice.channel) {
         return
     }
     if (oldState.channel !== null && newState.channel === null) {
@@ -79,39 +85,46 @@ client.on("messageCreate", async (msg) => {
     if (command.startsWith("help")) {
         var arg2 = args[0]
         if (arg2 == "" || arg2 == undefined) {
-            var embed = new Discord.MessageEmbed()
+            var embed = new discord.MessageEmbed()
                 .setColor("#1ecc18")
                 .setTitle('Please select a catagory.')
-            var defButton = new disbut.MessageButton()
+            var defButton = new discord.MessageButton()
                 .setLabel("Catagories")
-                .setStyle('grey')
-                .setID("H-Catagories")
-            var defButtonRow = new disbut.MessageActionRow().addComponent(defButton)
-            var buttonRow = new disbut.MessageActionRow()
+                .setStyle(2)
+                .setCustomId("H-Catagories")
+            var defButtonRow = new discord.MessageActionRow().addComponents(defButton)
+            var buttonRow = new discord.MessageActionRow()
             for (var key in helpJSON.Catagories) {
                 embed.addField(key, helpJSON.Catagories[key])
-                var keyButton = new disbut.MessageButton()
-                    .setID("H-" + key)
+                var keyButton = new discord.MessageButton()
+                    .setCustomId("H-" + key)
                     .setLabel(key)
-                    .setStyle('blurple')
-                buttonRow.addComponent(keyButton)
+                    .setStyle(1)
+                buttonRow.addComponents(keyButton)
             }
-            msg.channel.send({ embed: embed, components: [buttonRow, defButtonRow] });
+            msg.channel.send({ content: "\u200B", embeds: [embed], components: [buttonRow, defButtonRow] });
             return
         }
         var arg2C = arg2.charAt(0).toUpperCase() + arg2.slice(1);
         if (!helpJSON[arg2C]) {
-            message.channel.send("Not a valid catagory.")
+            msg.channel.send("Not a valid catagory.")
             return
         }
         var catagory = helpJSON[arg2C]
-        var embed = new Discord.MessageEmbed()
+        var embed = new discord.MessageEmbed()
             .setColor("#1ecc18")
             .setTitle('All commands for catagory: ' + arg2C)
         for (var key in catagory) {
             embed.addField(key, catagory[key])
         }
-        message.channel.send(embed);
+        msg.channel.send(embed);
+    } else /*Ping command */ if (command.startsWith("ping")) {
+        var curDate = Date.now()
+        var msgDate = msg.createdTimestamp
+        if (msgDate == 123123) {
+            return msg.channel.send("Because you used the DidYouMeanThis feature, the time will not be accurate.\nPlease retry.")
+        }
+        msg.channel.send("Pong! " + Math.round(Math.abs(curDate - msgDate) / 10) + "ms")
     } else /*Prefix command*/ if (command == "prefix") {
         if (!args[0]) {
             return msg.channel.send("You did not specify a prefix.\nThe prefix for this server is :`" + curPrefix + "`")
@@ -138,52 +151,99 @@ client.on("messageCreate", async (msg) => {
             msg.channel.send("Your nickname is now: `" + args.join(" ") + "`\n\nPlease add your real name to your nickname like this: `XX_SniperKiller_XX (Karel)`.")
             return
         }
-        var oldName = name
         var newName = args.join(" ")
         newName = newName.replace(/( \(unde)\w+/g, "")
         await msg.member.setNickname(newName)
         msg.channel.send("Your nickname is now: `" + newName + "`")
+    } else /*Suggestion command*/ if (command.startsWith("suggestion")) {
+        var suggestion = msg.content.substr(13)
+        const embed = new discord.MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle('Suggestion from `' + msg.member.displayName + "#" + msg.author.discriminator + "` in here.")
+            .setDescription(suggestion)
+            .setURL("https://discord.com/channels/" + msg.guildId + "/" + msg.channelId)
+
+        var joeryUser = client.users.cache.find(({ id }) => id == "255730583655809025")
+        joeryUser.send({ embeds: [embed] })
+        msg.channel.send("Suggestion sent to " + joeryUser.username + ".")
+    } else /*Find command the user meant */ {
+        /*Voice commands handled seperatly for readability */
+        if (await voiceCommand(msg, command, curPrefix, args) == true) { return }
+        var closestMatch = getClosest.custom(command, commands, compareLevenshteinDistance)
+        var distance = compareLevenshteinDistance(commands[closestMatch], command)
+        if (commands.find(value => value.toLowerCase() == commands[closestMatch])) {
+
+        }
+        if (distance >= 4) {
+            msg.channel.send("I didn't recognise that command. You can see all commands using ''" + config.prefix + "help''.")
+            return
+        }
+        function compareLevenshteinDistance(compareTo, baseItem) {
+            return new levenshtein(compareTo, baseItem).distance;
+        }
+        /*var button = new discord.MessageButton()
+            .setLabel("Yes.")
+            .setStyle(3)
+            .setCustomId("agree-button")
+            .setDisabled(false)
+        var buttonNo = new discord.MessageButton()
+            .setLabel("No.")
+            .setStyle(4)
+            .setCustomId("disagree-button")
+            .setDisabled(false)
+        var row = new discord.MessageActionRow()
+        row.addComponents(button)
+        row.addComponents(buttonNo)
+        didYouMeanVal = [msg, commands[closestMatch], command]*/
+        msg.channel.send({ content: "Did you mean: **" + commands[closestMatch] + "**?"/*, components: [row] */ })
     }
 })
 
 //Voice commands
-client.on("messageCreate", async (msg) => {
-    if (msg.member.user == client.user || !msg.content.startsWith(curPrefix)) { return }
-    var curPrefix = config.prefix[msg.guildId]
-    if (!curPrefix) { config.prefix[msg.guildId] = "!"; fs.writeFileSync("config.json", JSON.stringify(config)); config = require("config.json") }
-    var command = msg.content.split(" ")[0].slice(curPrefix.length).toLowerCase()
-    var args = msg.content.slice(command.length + curPrefix.length + 1).split(" ")
-    if (command.startsWith("join")) {
-        if (!msg.member.voice) {
-            return msg.channel.send("You need to be in a voice channel for me to join.")
+async function voiceCommand(msg, command, curPrefix, args) {
+    return new Promise(function (resolve, reject) {
+        var curPrefix = config.prefix[msg.guildId]
+        if (msg.member.user == client.user || !msg.content.startsWith(curPrefix)) { resolve(false) }
+        if (!curPrefix) { config.prefix[msg.guildId] = "!"; fs.writeFileSync("config.json", JSON.stringify(config)); config = require("config.json") }
+        var command = msg.content.split(" ")[0].slice(curPrefix.length).toLowerCase()
+        var args = msg.content.slice(command.length + curPrefix.length + 1).split(" ")
+        if /*Join command */ (command.startsWith("join")) {
+            if (!msg.member.voice) {
+                return msg.channel.send("You need to be in a voice channel for me to join.")
+            }
+            if (!players[msg.guildId]) { players[msg.guildId] = {} }
+            players[msg.guildId].c = disvoice.joinVoiceChannel({
+                channelId: msg.member.voice.channelId,
+                guildId: msg.guildId,
+                adapterCreator: msg.channel.guild.voiceAdapterCreator,
+            });
+            resolve(true)
+        } else /*Leave command */ if (command.startsWith("leave")) {
+            if (!disvoice.getVoiceConnection(msg.guildId)) {
+                return msg.channel.send("I'm not in a voice channel.")
+            }
+            disvoice.getVoiceConnection(msg.guildId).destroy()
+            resolve(true)
+        } else /*Say command */ if (command == "say") {
+            say(msg, args, command, curPrefix)
+            resolve(true)
         }
-        msg.member.voice.channel.join().then(connection => {
-            connection.voice.setSelfDeaf(true)
-            connection.voice.setSelfMute(true)
-        })
-    } else if (command.startsWith("leave")) {
-        if (msg.guild.voice == undefined) {
-            return msg.channel.send("I'm not in a voice channel.")
-        }
-        msg.guild.voice.channel.leave()
-    } else /*Say command*/ if (command == "say") {
-        say(msg, args, command, curPrefix)
-    }
-})
+        resolve(false)
+    })
+}
 
-
+//                  START OF SAY COMMAND
 async function say(msg, args, command, curPrefix) {
     // get text
     var text = args.join(" ")
     //join vc
-    if (msg.guild.me.voice.channel) {
-        var connection = disvoice.joinVoiceChannel({
-            channelId: msg.guild.me.voice.channelId,
-            guildId: msg.guildId,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
+    if (!players[msg.guildId]) { players[msg.guildId] = {} }
+    var guildPlayer = players[msg.guildId]
+    var connection
+    if (guildPlayer.c) {
+        connection = guildPlayer.c
     } else if (msg.member.voice.channel) {
-        var connection = disvoice.joinVoiceChannel({
+        connection = disvoice.joinVoiceChannel({
             channelId: msg.member.voice.channelId,
             guildId: msg.guildId,
             adapterCreator: msg.guild.voiceAdapterCreator,
@@ -206,24 +266,93 @@ async function say(msg, args, command, curPrefix) {
     var filter = new Filter({ emptyList: true, list: ["nigga", "nig", "neigha", "niega", "niegha", "neiga", "niger", "nigger"], placeHolder: "\u200B" })
     var oldText = text
     text = filter.clean(text.toLowerCase())
-    if (oldText !== text) {
-        msg.delete()
-    }
     // new discordjs V13 type
     const url = googleTTS.getAudioUrl(text, {
-        lang: TextLanguage,
         slow: false,
         host: 'https://translate.google.com',
     })
-    var curPlayer = players[msg.guildId]
-    if (!curPlayer || !curPlayer.player || !curPlayer.res) {
-        curPlayer.player = disvoice.createAudioPlayer()
-        curPlayer.res = disvoice.createAudioResource(url)
-    }
-    curPlayer.player
-    dispatcher.setVolume(volume)
+    guildPlayer.p = disvoice.createAudioPlayer()
+    guildPlayer.r = disvoice.createAudioResource(url, { inputType: disvoice.StreamType.Arbitrary, inlineVolume: true })
+    guildPlayer.r.volume.setVolume(volume)
+    guildPlayer.p.play(guildPlayer.r)
+    connection.subscribe(guildPlayer.p)
 }
-//                  end of say command
+//                  END OF SAY COMMAND
 
+//                  START OF HELP BUTTON HANDLING
+client.on('interactionCreate', async interaction => {
+    if (!interaction.customId.startsWith("H-")) return;
+    var catagory = helpJSON[interaction.customId.substr(2)]
+    var embed = new discord.MessageEmbed()
+        .setColor("#1ecc18")
+    if (interaction.customId == "H-Catagories") {
+        embed.setTitle('Please select a catagory.')
+    } else {
+        embed.setTitle('All commands for catagory: ' + interaction.customId.substr(2))
+    }
+    for (var key in catagory) {
+        embed.addField(key, catagory[key])
+    }
+    var buttonRow = new discord.MessageActionRow()
+    var embed2 = new discord.MessageEmbed()
+        .setColor("#1ecc18")
+        .setTitle('Please select a catagory.')
+    for (var key in helpJSON.Catagories) {
+        embed2.addField(key, helpJSON.Catagories[key])
+        var keyButton = new discord.MessageButton()
+            .setCustomId("H-" + key)
+            .setLabel(key)
+            .setStyle(1)
+            .setDisabled(false)
+        buttonRow.addComponents(keyButton)
+    }
+    var defButton = new discord.MessageButton()
+        .setLabel("Catagories")
+        .setStyle(2)
+        .setCustomId("H-Catagories")
+    var defButtonRow = new discord.MessageActionRow().addComponents(defButton)
+    await interaction.update({ content: "\u200B", embeds: [embed], components: [buttonRow, defButtonRow] });
+});
+//                  END OF HELP BUTTON HANDLING
 
+//                  START OF MISC BUTTON HANDLING
+client.on("interactionCreate", async interaction => {
+    /*if (interaction.customId == "agree-button") {
+        var message = didYouMeanVal[0]
+        var meantCommand = didYouMeanVal[1]
+        var commandName = didYouMeanVal[2]
+        message.content = message.content.replace(commandName, meantCommand)
+        message.channel = interaction.channel
+        message.channelId = interaction.channelId
+        message.createdTimestamp = 123123
+        client.emit("messageCreate", message)
+        var newbutton = new discord.MessageButton()
+            .setLabel("Yes.")
+            .setStyle(3)
+            .setCustomId("agree-button")
+            .setDisabled(true)
+        var buttonNo = new discord.MessageButton()
+            .setLabel("No.")
+            .setStyle(4)
+            .setCustomId("disagree-button")
+            .setDisabled(true)
+        var row = new discord.MessageActionRow()
+            .addComponents(newbutton, buttonNo)
+        interaction.update({ components: [row] })
+    } else if (interaction.customId == "disagree-button") {
+        var newbutton = new discord.MessageButton()
+            .setLabel("Yes.")
+            .setStyle(3)
+            .setCustomId("agree-button")
+            .setDisabled(true)
+        var buttonNo = new discord.MessageButton()
+            .setLabel("No.")
+            .setStyle(4)
+            .setCustomId("disagree-button")
+            .setDisabled(true)
+        var row = new discord.MessageActionRow()
+            .addComponents(newbutton, buttonNo)
+        await interaction.update({ components: [row] })
+    }*/
+})
 client.login(env.discord_token)
