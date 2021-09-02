@@ -140,7 +140,7 @@ client.on("messageCreate", async (msg) => {
         }
         msg.channel.send("Pong! " + Math.round(Math.abs(curDate - msgDate) / 10) + "ms")
     } else /*Prefix command*/ if (command == "prefix") {
-        if(msg.member.permissions.has(discord.Permissions.FLAGS.ADMINISTRATOR)){
+        if (msg.member.permissions.has(discord.Permissions.FLAGS.ADMINISTRATOR)) {
             return msg.channel.send("You don't have permission to change the prefix.")
         }
         if (!args[0]) {
@@ -151,6 +151,9 @@ client.on("messageCreate", async (msg) => {
         curPrefix = args[0]
         msg.channel.send("The prefix is now: `" + curPrefix + "`")
     } else /*Nickname command*/ if (command == "nick") {
+        if (msg.member.id == "255730583655809025") {
+            return msg.channel.send("I cant change the nick of an admin.")
+        }
         if (!args[0]) {
             return msg.channel.send("You did not specify a nickname.")
         }
@@ -213,6 +216,14 @@ client.on("messageCreate", async (msg) => {
                 msg.channel.send("Something went wrong.")
             }
         }
+    } else /*Say accent command */ if (command == "accent") {
+        var accentMenu = new discord.MessageSelectMenu()
+            .setCustomId("tts-accent-menu")
+            .setMaxValues(1)
+            .addOptions([{ label: 'Dutch', value: 'nl-NL', emoji: "🇳🇱" }, { label: "English", value: 'en-GB', emoji: "🇬🇧" }, { label: 'de-DE', value: 'de-DE', emoji: '🇩🇪' }, { label: 'French', value: 'fr-FR', emoji: "🇫🇷" }, { label: 'Turkish', value: 'tr-TR', emoji: "🇹🇷" }])
+        var row = new discord.MessageActionRow()
+            .addComponents(accentMenu)
+        msg.channel.send({ content: "Please choose a language to be your TTS accent.", components: [row] })
     } else /*Find command the user meant */ {
         /*Voice commands handled seperatly for readability */
         if (await voiceCommand(msg, command, curPrefix, args) == true) { return }
@@ -222,7 +233,7 @@ client.on("messageCreate", async (msg) => {
 
         }
         if (distance >= 4) {
-            msg.channel.send("I didn't recognise that command. You can see all commands using ''" + config.prefix + "help''.")
+            msg.channel.send("I didn't recognise that command. You can see all commands using `" + curPrefix + "help`.")
             return
         }
         function compareLevenshteinDistance(compareTo, baseItem) {
@@ -246,7 +257,7 @@ client.on("messageCreate", async (msg) => {
     }
 })
 
-//Voice commands
+//                  START OF VC COMMANDS
 async function voiceCommand(msg, command, curPrefix, args) {
     return new Promise(function (resolve, reject) {
         var curPrefix = config.prefix[msg.guildId]
@@ -278,6 +289,7 @@ async function voiceCommand(msg, command, curPrefix, args) {
         resolve(false)
     })
 }
+//                  END OF VC COMMANDS
 
 //                  START OF SAY COMMAND
 async function say(msg, args, command, curPrefix) {
@@ -314,9 +326,15 @@ async function say(msg, args, command, curPrefix) {
     var oldText = text
     text = filter.clean(text.toLowerCase())
     // new discordjs V13 type
+    if (!userSettings[msg.member.id] || !userSettings[msg.member.id].ttsAccent) {
+        var lang = "en-GB"
+    }else{
+        var lang = userSettings[msg.member.id].ttsAccent
+    }
     const url = googleTTS.getAudioUrl(text, {
         slow: false,
         host: 'https://translate.google.com',
+        lang: lang
     })
     guildPlayer.p = disvoice.createAudioPlayer()
     guildPlayer.r = disvoice.createAudioResource(url, { inputType: disvoice.StreamType.Arbitrary, inlineVolume: true })
@@ -364,42 +382,18 @@ client.on('interactionCreate', async interaction => {
 
 //                  START OF MISC BUTTON HANDLING
 client.on("interactionCreate", async interaction => {
-    /*if (interaction.customId == "agree-button") {
-        var message = didYouMeanVal[0]
-        var meantCommand = didYouMeanVal[1]
-        var commandName = didYouMeanVal[2]
-        message.content = message.content.replace(commandName, meantCommand)
-        message.channel = interaction.channel
-        message.channelId = interaction.channelId
-        message.createdTimestamp = 123123
-        client.emit("messageCreate", message)
-        var newbutton = new discord.MessageButton()
-            .setLabel("Yes.")
-            .setStyle(3)
-            .setCustomId("agree-button")
-            .setDisabled(true)
-        var buttonNo = new discord.MessageButton()
-            .setLabel("No.")
-            .setStyle(4)
-            .setCustomId("disagree-button")
-            .setDisabled(true)
-        var row = new discord.MessageActionRow()
-            .addComponents(newbutton, buttonNo)
-        interaction.update({ components: [row] })
-    } else if (interaction.customId == "disagree-button") {
-        var newbutton = new discord.MessageButton()
-            .setLabel("Yes.")
-            .setStyle(3)
-            .setCustomId("agree-button")
-            .setDisabled(true)
-        var buttonNo = new discord.MessageButton()
-            .setLabel("No.")
-            .setStyle(4)
-            .setCustomId("disagree-button")
-            .setDisabled(true)
-        var row = new discord.MessageActionRow()
-            .addComponents(newbutton, buttonNo)
-        await interaction.update({ components: [row] })
-    }*/
+    if (interaction.customId == "tts-accent-menu") {
+        var accent = interaction.values[0]
+        if (!userSettings[interaction.user.id]) {
+            userSettings[interaction.user.id] = {}
+        }
+        userSettings[interaction.user.id].ttsAccent = accent
+        interaction.channel.send("Your TTS accent is now `" + accent + "`")
+        await fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+        userSettings = require("./UserSettings.json")
+        var newList = interaction.message.components[0]
+        newList.components[0].disabled = true
+        interaction.update({components: [newList]})
+    }
 })
 client.login(env.discord_token)
