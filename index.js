@@ -228,7 +228,7 @@ client.on("messageCreate", async (msg) => {
         msg.channel.send({ content: "Please choose a language to be your TTS accent.", components: [row] })
     } else /*Meme command*/ if (command == "meme") {
         const memeJSON = require('./memeVideos.json')
-        var videoID = memeJSON[Math.floor(Math.random() * (4965 - 0))]
+        var videoID = memeJSON[Math.floor(Math.random() * (9575))]
         var ytdlVideo = ytdl("https://www.youtube.com/watch?v=" + videoID, { quality: 18 })
         var videoURL = "https://www.youtube.com/watch?v=" + videoID
         var videoInfo = (await ytdl.getBasicInfo(videoURL)).videoDetails
@@ -241,7 +241,7 @@ client.on("messageCreate", async (msg) => {
         }
         //format dislikes
         if (videoInfo.dislikes == NaN) {
-            var dislikes = 0
+            var dislikes = "0"
         } else if (videoInfo.dislikes >= 1000) {
             var dislikes = Math.round(videoInfo.dislikes / 1000) + 'K'
         } else {
