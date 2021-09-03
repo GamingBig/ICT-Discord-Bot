@@ -2,7 +2,8 @@
     "Catagories": {
         "Voice": "Voice commands.",
         "Bot": "Bot management commands.",
-        "User": "User control commands."
+        "User": "User control commands.",
+        "Misc": "Miscellaneous commands."
     },
     "Voice": {
         "Join": "Join the VC you are currently in.",
@@ -18,5 +19,8 @@
     "User": {
         "Nick": "Allows you to set your nickname.",
         "Role": "Allows youto use `role color` to change the color of your role and `role name` to change the name."
+    },
+    "Misc": {
+        "Meme": "Get a random meme from the [instant regret playlist](https://www.youtube.com/playlist?list=PLv3TTBr1W_9u3TaDTrZyW-7UsJQCQzqmP) totaling 4965 videos"
     }
 }

@@ -12,6 +12,8 @@ const { REST } = require('@discordjs/rest');
 const rest = new REST({ version: '9' }).setToken(env.discord_token);
 var userSettings = require("./UserSettings.json")
 var toHex = require('colornames')
+const ytdl = require("ytdl-core")
+var lastMeme = 0
 
 //help command setup
 var getClosest = require("get-closest");
@@ -224,6 +226,71 @@ client.on("messageCreate", async (msg) => {
         var row = new discord.MessageActionRow()
             .addComponents(accentMenu)
         msg.channel.send({ content: "Please choose a language to be your TTS accent.", components: [row] })
+    } else /*Meme command*/ if (command == "meme") {
+        const memeJSON = require('./memeVideos.json')
+        var videoID = memeJSON[Math.floor(Math.random() * (4965 - 0))]
+        var ytdlVideo = ytdl("https://www.youtube.com/watch?v=" + videoID, { quality: 18 })
+        var videoURL = "https://www.youtube.com/watch?v=" + videoID
+        var videoInfo = (await ytdl.getBasicInfo(videoURL)).videoDetails
+        currentMemeTime = Date.now()
+        //format likes
+        if (videoInfo.likes >= 1000) {
+            var likes = Math.round(videoInfo.likes / 1000) + 'K'
+        } else {
+            var likes = videoInfo.likes
+        }
+        //format dislikes
+        if (videoInfo.dislikes == NaN) {
+            var dislikes = 0
+        } else if (videoInfo.dislikes >= 1000) {
+            var dislikes = Math.round(videoInfo.dislikes / 1000) + 'K'
+        } else {
+            var dislikes = videoInfo.dislikes
+        }
+        //format views
+        if (videoInfo.viewCount >= 1000) {
+            var views = Math.round(videoInfo.viewCount / 1000) + 'K'
+        } else {
+            var views = videoInfo.viewCount
+        }
+        //see if video is unavailable
+        if (videoInfo.isPrivate || !videoInfo.isCrawlable || videoInfo.isUnlisted) {
+            return msg.channel.send('I accidently stumbled upon a privatised video, please try again.')
+        }
+        likes = likes.toString()
+        dislikes = dislikes.toString()
+        if ((currentMemeTime - lastMeme) >= 10000) {
+            msg.channel.sendTyping()
+            lastMeme = Date.now()
+            ytdlVideo.pipe(fs.createWriteStream('memeVideo.mp4')).on('finish', function () {
+                setTimeout(function () {
+                    const embed = new discord.MessageEmbed()
+                        .setColor('#FF0000')
+                        .setTitle(videoInfo.title)
+                        .setURL(videoURL)
+                        .addFields(
+                            [
+                                { name: 'Uploader', value: '[' + videoInfo.author.name + '](' + videoInfo.author.channel_url + ')', inline: false },
+                                { name: 'Likes', value: likes, inline: true },
+                                { name: 'Dislikes', value: dislikes, inline: true },
+                                { name: 'Views', value: views, inline: true }
+                            ]
+                        )
+                        .setTimestamp('timestamp')
+                        .setFooter('\u200B', 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/800px-YouTube_full-color_icon_%282017%29.svg.png')
+                    msg.channel.send({ embeds: [embed], files: ["./memeVideo.mp4"] }).then(() => {
+                        fs.rmSync("./memeVideo.mp4")
+                    })
+                }, 100)
+            })
+        } else {
+            msg.channel.send("Please wait " + (10 - (Math.round((currentMemeTime - lastMeme) / 100) / 10)) + " more seconds")
+        }
+        client.on('error', (error) => {
+            console.log(error);
+            msg.channel.send(error.message.split('\n')[0])
+            return
+        });
     } else /*Find command the user meant */ {
         /*Voice commands handled seperatly for readability */
         if (await voiceCommand(msg, command, curPrefix, args) == true) { return }
@@ -328,7 +395,7 @@ async function say(msg, args, command, curPrefix) {
     // new discordjs V13 type
     if (!userSettings[msg.member.id] || !userSettings[msg.member.id].ttsAccent) {
         var lang = "en-GB"
-    }else{
+    } else {
         var lang = userSettings[msg.member.id].ttsAccent
     }
     const url = googleTTS.getAudioUrl(text, {
@@ -393,7 +460,7 @@ client.on("interactionCreate", async interaction => {
         userSettings = require("./UserSettings.json")
         var newList = interaction.message.components[0]
         newList.components[0].disabled = true
-        interaction.update({components: [newList]})
+        interaction.update({ components: [newList] })
     }
 })
 client.login(env.discord_token)
