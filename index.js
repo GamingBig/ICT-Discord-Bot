@@ -48,21 +48,23 @@ client.on("ready", () => {
 })
 
 //leave when other have left
-client.on('voiceStateUpdate', (oldState, newState) => {
-    if (!oldState.guild.me.voice || !oldState.guild.me.voice.channel) {
-        return
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    if (!oldState.guild.me.voice || !oldState.guild.me.voice.channel) { return }
+    var guild = client.guilds.cache.get(newState.guild.id)
+    var channel = guild.channels.cache.get(oldState.channelId)
+    if (!oldState.channel) { return }
+    if (oldState.channel.members.size > channel.members.size) {
+
     }
-    if (oldState.member.voice.channel !== null && newState.member.voice.channel === null) {
-        var memberArray = oldState.member.voice.channel.members
-        var realMemberArray = []
-        memberArray.array().forEach(element => {
-            if (element.user.bot == false) {
-                realMemberArray.push(element.user)
-            }
-        })
-        if (realMemberArray.length == 0) {
-            oldState.guild.voice.channel.leave()
+    var memberArray = channel.members
+    var realMemberArray = []
+    memberArray.map(user => user.user.bot).forEach(element => {
+        if (element == false) {
+            realMemberArray.push(element.user)
         }
+    })
+    if (realMemberArray.length == 0) {
+        disvoice.getVoiceConnection(guild.id).destroy()
     }
 });
 
