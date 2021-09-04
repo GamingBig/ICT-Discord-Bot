@@ -13,7 +13,6 @@ const rest = new REST({ version: '9' }).setToken(env.discord_token);
 var userSettings = require("./UserSettings.json")
 var toHex = require('colornames')
 const ytdl = require("ytdl-core")
-var schedule = require('node-schedule');
 var lastMeme = 0
 
 //help command setup
@@ -41,6 +40,7 @@ const myIntents = new discord.Intents();
 myIntents.add(discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MEMBERS, discord.Intents.FLAGS.GUILD_VOICE_STATES, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS)
 var client = new discord.Client({ intents: myIntents })
 
+//
 client.on("ready", () => {
     console.log("Logged in as: " + client.user.tag)
     client.user.setActivity("to bits changing from 0 to 1.", {
@@ -70,22 +70,12 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     }
 });
 
-
-//get meme every real hour
-const job = schedule.scheduleJob({ rule: "0 * 10-20 * * *" }, function () {
-    if (client.isReady) {
-        try {
-            client.guilds.cache.get("882207507785842738").channels.cache.get("883448347036377089").send("AUTOMATEDmeme")
-        } catch (err) {
-            err
-        }
-    }
-});
-
+//give role on join
 client.on('guildMemberAdd', (guildMember) => {
     guildMember.roles.add(guildMember.guild.roles.cache.find(role => role.name === "Standaard rol"));
 });
 
+//start message handling
 client.on("messageCreate", async (msg) => {
     var user = msg.member
     if (msg.guildId == "882207507785842738") {

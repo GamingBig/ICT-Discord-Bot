@@ -22,7 +22,6 @@
     "get-closest": "^0.0.4",
     "google-tts-api": "^2.0.2",
     "levenshtein": "^1.0.5",
-    "node-schedule": "^2.0.0",
     "opusscript": "^0.0.8",
     "tweetnacl": "^1.0.3",
     "ytdl-core": "^4.9.1"
