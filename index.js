@@ -76,16 +76,18 @@ client.on('guildMemberAdd', (guildMember) => {
 
 client.on("messageCreate", async (msg) => {
     var user = msg.member
-    if (!userSettings[user.id]) {
-        userSettings[user.id] = {}
-    }
-    if (!userSettings[user.id].role) {
-        var userRole = await msg.guild.roles.create({ name: user.displayName, position: 0 })
-        user.roles.add(userRole)
-        var curUserSettings = userSettings[user.id]
-        curUserSettings.role = userRole.id
-        await fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
-        userSettings = require("./UserSettings.json")
+    if (msg.guildId == "882207507785842738") {
+        if (!userSettings[user.id]) {
+            userSettings[user.id] = {}
+        }
+        if (!userSettings[user.id].role) {
+            var userRole = await msg.guild.roles.create({ name: user.displayName, position: 0 })
+            user.roles.add(userRole)
+            var curUserSettings = userSettings[user.id]
+            curUserSettings.role = userRole.id
+            fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+            userSettings = require("./UserSettings.json")
+        }
     }
     if (msg.member.user == client.user) { return }
     var curPrefix = config.prefix[msg.guildId]
@@ -192,6 +194,9 @@ client.on("messageCreate", async (msg) => {
         joeryUser.send({ embeds: [embed] })
         msg.channel.send("Suggestion sent to " + joeryUser.username + ".")
     } else /*Role commands */ if (command == "role") {
+        if (msg.guildId !== "882207507785842738") {
+            return
+        }
         var subCommand = args[0]
         if (!subCommand) {
             return msg.channel.send("Please say what you want to change about your role.\nUse `" + curPrefix + "role color` to change the color and `" + curPrefix + "role name` to change the name.")
