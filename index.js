@@ -13,6 +13,7 @@ const rest = new REST({ version: '9' }).setToken(env.discord_token);
 var userSettings = require("./UserSettings.json")
 var toHex = require('colornames')
 const ytdl = require("ytdl-core")
+var schedule = require('node-schedule');
 var lastMeme = 0
 
 //help command setup
@@ -70,6 +71,17 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 });
 
 
+//get meme every real hour
+const job = schedule.scheduleJob({ rule: "0 * 10-20 * * *" }, function () {
+    if (client.isReady) {
+        try {
+            client.guilds.cache.get("882207507785842738").channels.cache.get("883448347036377089").send("AUTOMATEDmeme")
+        } catch (err) {
+            err
+        }
+    }
+});
+
 client.on('guildMemberAdd', (guildMember) => {
     guildMember.roles.add(guildMember.guild.roles.cache.find(role => role.name === "Standaard rol"));
 });
@@ -89,9 +101,10 @@ client.on("messageCreate", async (msg) => {
             userSettings = require("./UserSettings.json")
         }
     }
-    if (msg.member.user == client.user) { return }
     var curPrefix = config.prefix[msg.guildId]
+    if (msg.member.user == client.user && msg.content !== "AUTOMATEDmeme") { return }
     if (!curPrefix) { config.prefix[msg.guildId] = "!"; fs.writeFileSync("config.json", JSON.stringify(config)); config = require("config.json") }
+    if (msg.content == "AUTOMATEDmeme") { curPrefix = "AUTOMATED"; msg.delete() }
     if (msg.content.includes("<@!882229344808894484>") || msg.content.includes("@&882229864105672754")) {
         msg.channel.send("Hello. I'm a bot made for the Koning Willem 1 College, ICT Academy.\n\nPrefix for this server is: `" + config.prefix[msg.guildId] + "`.\n\nMy main purpose has not been decided yet, but it will come.")
     }
