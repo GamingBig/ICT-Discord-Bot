@@ -44,6 +44,7 @@ client.on("ready", () => {
     console.log("Logged in as: " + client.user.tag)
     client.user.setActivity("how long can I procrastinate for.", {
         type: "PLAYING",
+        url: "https://github.com/GamingBig/ICT-Discord-Bot"
     });
 })
 
