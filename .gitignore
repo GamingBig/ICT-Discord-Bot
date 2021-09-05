@@ -1,5 +1,5 @@
 .env
 node_modules
 log.txt
+UserSettings.json
 /memeVideo.mp4
-/UserSettings.json

@@ -233,7 +233,11 @@ client.on("messageCreate", async (msg) => {
         var accentMenu = new discord.MessageSelectMenu()
             .setCustomId("tts-accent-menu")
             .setMaxValues(1)
-            .addOptions([{ label: 'Dutch', value: 'nl-NL', emoji: "🇳🇱" }, { label: "English", value: 'en-GB', emoji: "🇬🇧" }, { label: 'de-DE', value: 'de-DE', emoji: '🇩🇪' }, { label: 'French', value: 'fr-FR', emoji: "🇫🇷" }, { label: 'Turkish', value: 'tr-TR', emoji: "🇹🇷" }])
+            .addOptions([{ label: 'Dutch', value: 'nl-NL;Dutch', emoji: "🇳🇱" },
+            { label: "English", value: 'en-GB;English', emoji: "🇬🇧" },
+            { label: 'German', value: 'de-DE;German', emoji: '🇩🇪' },
+            { label: 'French', value: 'fr-FR;French', emoji: "🇫🇷" },
+            { label: 'Turkish', value: 'tr-TR;Turkish', emoji: "🇹🇷" }])
         var row = new discord.MessageActionRow()
             .addComponents(accentMenu)
         msg.channel.send({ content: "Please choose a language to be your TTS accent.", components: [row] })
@@ -461,17 +465,15 @@ client.on('interactionCreate', async interaction => {
 //                  START OF MISC BUTTON HANDLING
 client.on("interactionCreate", async interaction => {
     if (interaction.customId == "tts-accent-menu") {
-        var accent = interaction.values[0]
+        var accent = interaction.values[0].split(";")[0]
         if (!userSettings[interaction.user.id]) {
             userSettings[interaction.user.id] = {}
         }
         userSettings[interaction.user.id].ttsAccent = accent
-        interaction.channel.send("Your TTS accent is now `" + accent + "`")
-        await fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+        fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
         userSettings = require("./UserSettings.json")
-        var newList = interaction.message.components[0]
-        newList.components[0].disabled = true
-        interaction.update({ components: [newList] })
+        var newContent = interaction.message.content.split("\n")[0] + "\n\n<@!" + interaction.user.id + ">'s TTS accent is now: `" + interaction.values[0].split(";")[1] + "`"
+        interaction.update({ content: newContent })
     }
 })
 client.login(env.discord_token)
