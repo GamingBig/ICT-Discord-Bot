@@ -74,6 +74,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 //give role on join
 client.on('guildMemberAdd', (guildMember) => {
     guildMember.roles.add(guildMember.guild.roles.cache.find(role => role.name === "Standaard rol"));
+    var curPrefix = config.prefix[guildMember.guild.id]
+    guildMember.guild.systemChannel.send("Welcome " + guildMember.displayName + "!\n"
+        + "\nPlease change your nickname (`" + curPrefix + "nick`) to have your real name be behind your username. (for example: `XX_SniperKiller_XX (Karel)`)\n"
+        + "\nIf you want you can change your role name or role color use: `" + curPrefix + "role color (either hex color or color name)` and `" + curPrefix + "role name (name)`.\n"
+        + "\nHave fun ||and please don't post porn in general, do that in <#882209669043609600>||")
 });
 
 //start message handling
@@ -88,6 +93,13 @@ client.on("messageCreate", async (msg) => {
             user.roles.add(userRole)
             var curUserSettings = userSettings[user.id]
             curUserSettings.role = userRole.id
+            fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+            userSettings = require("./UserSettings.json")
+        }
+        if (!userSettings[user.id].name) {
+            if (!msg.member.displayName.includes("(")) return
+            var realName = msg.member.displayName.split("(")[msg.member.displayName.split("(").length - 1].split(")")[0]
+            userSettings[user.id].name = realName
             fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
             userSettings = require("./UserSettings.json")
         }
@@ -173,19 +185,28 @@ client.on("messageCreate", async (msg) => {
         } else {
             var name = msg.member.nickname
         }
-        if (!name.includes("(") && !args.join(" ").includes("(")) {
-            if (!name && !args.join(" ").includes("(")) {
-                msg.member.setNickname(args.join(" "))
-                return msg.channel.send("Your nickname is now: `" + args.join(" ") + "`\n\nPlease add your real name to your nickname like this: `XX_SniperKiller_XX (Karel)`.")
+        if (!args.join(" ").includes("(")) {
+            if (userSettings[msg.member.id] && userSettings[msg.member.id].name) {
+                var newName = args.join(" ") + " (" + userSettings[msg.member.id].name + ")"
+                newName = newName.replace(/( \(undefined)\w+/g, "")
+                await msg.member.setNickname(newName)
+                return msg.channel.send("Your nickname is now: `" + newName + "`")
             }
             msg.member.setNickname(args.join(" "))
             msg.channel.send("Your nickname is now: `" + args.join(" ") + "`\n\nPlease add your real name to your nickname like this: `XX_SniperKiller_XX (Karel)`.")
             return
         }
         var newName = args.join(" ")
-        newName = newName.replace(/( \(unde)\w+/g, "")
+        newName = newName.replace(/( \(undefined)\w+/g, "")
         await msg.member.setNickname(newName)
         msg.channel.send("Your nickname is now: `" + newName + "`")
+        var realName = newName.split("(")[newName.split("(").length - 1].split(")")[0]
+        if (!userSettings[msg.member.id]) {
+            userSettings[msg.member.id] = {}
+        }
+        userSettings[msg.member.id].name = realName
+        fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+        userSettings = require("./UserSettings.json")
     } else /*Suggestion command*/ if (command.startsWith("suggestion")) {
         var suggestion = args.join(" ")
         const embed = new discord.MessageEmbed()
@@ -315,11 +336,11 @@ client.on("messageCreate", async (msg) => {
                 .setColor('#0099ff')
                 .setTitle('Math')
                 .addFields([
-                    { name: 'Request', value: "\u200B"+request, inline: true },
-                    { name: 'Result', value: "\u200B"+math, inline: true }
+                    { name: 'Request', value: "\u200B" + request, inline: true },
+                    { name: 'Result', value: "\u200B" + math, inline: true }
                 ])
 
-            msg.channel.send({embeds: [embed]})
+            msg.channel.send({ embeds: [embed] })
         } catch (error) {
             console.log(error);
             msg.channel.send("That doesn't math right.")
