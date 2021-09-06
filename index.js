@@ -13,6 +13,7 @@ const rest = new REST({ version: '9' }).setToken(env.discord_token);
 var userSettings = require("./UserSettings.json")
 var toHex = require('colornames')
 const ytdl = require("ytdl-core")
+const mathJS = require('mathjs')
 var lastMeme = 0
 
 //help command setup
@@ -186,7 +187,7 @@ client.on("messageCreate", async (msg) => {
         await msg.member.setNickname(newName)
         msg.channel.send("Your nickname is now: `" + newName + "`")
     } else /*Suggestion command*/ if (command.startsWith("suggestion")) {
-        var suggestion = msg.content.substr(13)
+        var suggestion = args.join(" ")
         const embed = new discord.MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Suggestion from `' + msg.member.displayName + "#" + msg.author.discriminator + "` in here.")
@@ -306,6 +307,23 @@ client.on("messageCreate", async (msg) => {
             msg.channel.send(error.message.split('\n')[0])
             return
         });
+    } else /*Math command*/ if (command == "math") {
+        var request = args.join(" ")
+        try {
+            var math = mathJS.evaluate(request)
+            const embed = new discord.MessageEmbed()
+                .setColor('#0099ff')
+                .setTitle('Math')
+                .addFields([
+                    { name: 'Request', value: "\u200B"+request, inline: true },
+                    { name: 'Result', value: "\u200B"+math, inline: true }
+                ])
+
+            msg.channel.send({embeds: [embed]})
+        } catch (error) {
+            console.log(error);
+            msg.channel.send("That doesn't math right.")
+        }
     } else /*Find command the user meant */ {
         /*Voice commands handled seperatly for readability */
         if (await voiceCommand(msg, command, curPrefix, args) == true) { return }
