@@ -12,6 +12,8 @@ const { REST } = require('@discordjs/rest');
 const rest = new REST({ version: '9' }).setToken(env.discord_token);
 var userSettings = require("./UserSettings.json")
 var toHex = require('colornames')
+const ytdl = require("ytdl-core")
+var lastMeme = 0
 
 //help command setup
 var getClosest = require("get-closest");
@@ -38,53 +40,61 @@ const myIntents = new discord.Intents();
 myIntents.add(discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MEMBERS, discord.Intents.FLAGS.GUILD_VOICE_STATES, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS)
 var client = new discord.Client({ intents: myIntents })
 
+//
 client.on("ready", () => {
     console.log("Logged in as: " + client.user.tag)
-    client.user.setActivity("how long can I procrastinate for.", {
-        type: "PLAYING",
+    client.user.setActivity("to bits changing from 0 to 1.", {
+        type: "LISTENING",
+        url: "https://github.com/GamingBig/ICT-Discord-Bot"
     });
 })
 
 //leave when other have left
-client.on('voiceStateUpdate', (oldState, newState) => {
-    if (!oldState.guild.me.voice || !oldState.guild.me.voice.channel) {
-        return
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    if (!oldState.guild.me.voice || !oldState.guild.me.voice.channel) { return }
+    var guild = client.guilds.cache.get(newState.guild.id)
+    var channel = guild.channels.cache.get(oldState.channelId)
+    if (!oldState.channel) { return }
+    if (oldState.channel.members.size > channel.members.size) {
+
     }
-    if (oldState.member.voice.channel !== null && newState.member.voice.channel === null) {
-        var memberArray = oldState.member.voice.channel.members
-        var realMemberArray = []
-        memberArray.array().forEach(element => {
-            if (element.user.bot == false) {
-                realMemberArray.push(element.user)
-            }
-        })
-        if (realMemberArray.length == 0) {
-            oldState.guild.voice.channel.leave()
+    var memberArray = channel.members
+    var realMemberArray = []
+    memberArray.map(user => user.user.bot).forEach(element => {
+        if (element == false) {
+            realMemberArray.push(element.user)
         }
+    })
+    if (realMemberArray.length == 0) {
+        disvoice.getVoiceConnection(guild.id).destroy()
     }
 });
 
-
+//give role on join
 client.on('guildMemberAdd', (guildMember) => {
     guildMember.roles.add(guildMember.guild.roles.cache.find(role => role.name === "Standaard rol"));
 });
 
+//start message handling
 client.on("messageCreate", async (msg) => {
     var user = msg.member
-    if (!userSettings[user.id]) {
-        userSettings[user.id] = {}
+    if (msg.guildId == "882207507785842738") {
+        if (!userSettings[user.id]) {
+            userSettings[user.id] = {}
+        }
+        if (!userSettings[user.id].role) {
+            var userRole = await msg.guild.roles.create({ name: user.displayName, position: 0 })
+            user.roles.add(userRole)
+            var curUserSettings = userSettings[user.id]
+            curUserSettings.role = userRole.id
+            fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+            userSettings = require("./UserSettings.json")
+        }
     }
-    if (!userSettings[user.id].role) {
-        var userRole = await msg.guild.roles.create({ name: user.displayName, position: 0 })
-        user.roles.add(userRole)
-        var curUserSettings = userSettings[user.id]
-        curUserSettings.role = userRole.id
-        await fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
-        userSettings = require("./UserSettings.json")
-    }
-    if (msg.member.user == client.user) { return }
     var curPrefix = config.prefix[msg.guildId]
+    if (msg.member.user == client.user && msg.content !== "AUTOMATEDmeme") { return }
     if (!curPrefix) { config.prefix[msg.guildId] = "!"; fs.writeFileSync("config.json", JSON.stringify(config)); config = require("config.json") }
+    if (msg.content == "AUTOMATEDmeme") { curPrefix = "AUTOMATED"; msg.delete() }
     if (msg.content.includes("<@!882229344808894484>") || msg.content.includes("@&882229864105672754")) {
         msg.channel.send("Hello. I'm a bot made for the Koning Willem 1 College, ICT Academy.\n\nPrefix for this server is: `" + config.prefix[msg.guildId] + "`.\n\nMy main purpose has not been decided yet, but it will come.")
     }
@@ -187,6 +197,9 @@ client.on("messageCreate", async (msg) => {
         joeryUser.send({ embeds: [embed] })
         msg.channel.send("Suggestion sent to " + joeryUser.username + ".")
     } else /*Role commands */ if (command == "role") {
+        if (msg.guildId !== "882207507785842738") {
+            return
+        }
         var subCommand = args[0]
         if (!subCommand) {
             return msg.channel.send("Please say what you want to change about your role.\nUse `" + curPrefix + "role color` to change the color and `" + curPrefix + "role name` to change the name.")
@@ -220,10 +233,79 @@ client.on("messageCreate", async (msg) => {
         var accentMenu = new discord.MessageSelectMenu()
             .setCustomId("tts-accent-menu")
             .setMaxValues(1)
-            .addOptions([{ label: 'Dutch', value: 'nl-NL', emoji: "🇳🇱" }, { label: "English", value: 'en-GB', emoji: "🇬🇧" }, { label: 'de-DE', value: 'de-DE', emoji: '🇩🇪' }, { label: 'French', value: 'fr-FR', emoji: "🇫🇷" }, { label: 'Turkish', value: 'tr-TR', emoji: "🇹🇷" }])
+            .addOptions([{ label: 'Dutch', value: 'nl-NL;Dutch', emoji: "🇳🇱" },
+            { label: "English", value: 'en-GB;English', emoji: "🇬🇧" },
+            { label: 'German', value: 'de-DE;German', emoji: '🇩🇪' },
+            { label: 'French', value: 'fr-FR;French', emoji: "🇫🇷" },
+            { label: 'Turkish', value: 'tr-TR;Turkish', emoji: "🇹🇷" }])
         var row = new discord.MessageActionRow()
             .addComponents(accentMenu)
         msg.channel.send({ content: "Please choose a language to be your TTS accent.", components: [row] })
+    } else /*Meme command*/ if (command == "meme") {
+        const memeJSON = require('./memeVideos.json')
+        var videoID = memeJSON[Math.floor(Math.random() * (9575))]
+        var ytdlVideo = ytdl("https://www.youtube.com/watch?v=" + videoID, { quality: 18 })
+        var videoURL = "https://www.youtube.com/watch?v=" + videoID
+        var videoInfo = (await ytdl.getBasicInfo(videoURL)).videoDetails
+        currentMemeTime = Date.now()
+        //format likes
+        if (videoInfo.likes >= 1000) {
+            var likes = Math.round(videoInfo.likes / 1000) + 'K'
+        } else {
+            var likes = videoInfo.likes
+        }
+        //format dislikes
+        if (videoInfo.dislikes == NaN) {
+            var dislikes = "0"
+        } else if (videoInfo.dislikes >= 1000) {
+            var dislikes = Math.round(videoInfo.dislikes / 1000) + 'K'
+        } else {
+            var dislikes = videoInfo.dislikes
+        }
+        //format views
+        if (videoInfo.viewCount >= 1000) {
+            var views = Math.round(videoInfo.viewCount / 1000) + 'K'
+        } else {
+            var views = videoInfo.viewCount
+        }
+        //see if video is unavailable
+        if (videoInfo.isPrivate || !videoInfo.isCrawlable || videoInfo.isUnlisted) {
+            return msg.channel.send('I accidently stumbled upon a privatised video, please try again.')
+        }
+        likes = likes.toString()
+        dislikes = dislikes.toString()
+        if ((currentMemeTime - lastMeme) >= 10000) {
+            msg.channel.sendTyping()
+            lastMeme = Date.now()
+            ytdlVideo.pipe(fs.createWriteStream('memeVideo.mp4')).on('finish', function () {
+                setTimeout(function () {
+                    const embed = new discord.MessageEmbed()
+                        .setColor('#FF0000')
+                        .setTitle(videoInfo.title)
+                        .setURL(videoURL)
+                        .addFields(
+                            [
+                                { name: 'Uploader', value: '[' + videoInfo.author.name + '](' + videoInfo.author.channel_url + ')', inline: false },
+                                { name: 'Likes', value: likes, inline: true },
+                                { name: 'Dislikes', value: dislikes, inline: true },
+                                { name: 'Views', value: views, inline: true }
+                            ]
+                        )
+                        .setTimestamp('timestamp')
+                        .setFooter('\u200B', 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/800px-YouTube_full-color_icon_%282017%29.svg.png')
+                    msg.channel.send({ embeds: [embed], files: ["./memeVideo.mp4"] }).then(() => {
+                        fs.rmSync("./memeVideo.mp4")
+                    })
+                }, 100)
+            })
+        } else {
+            msg.channel.send("Please wait " + (10 - (Math.round((currentMemeTime - lastMeme) / 100) / 10)) + " more seconds")
+        }
+        client.on('error', (error) => {
+            console.log(error);
+            msg.channel.send(error.message.split('\n')[0])
+            return
+        });
     } else /*Find command the user meant */ {
         /*Voice commands handled seperatly for readability */
         if (await voiceCommand(msg, command, curPrefix, args) == true) { return }
@@ -328,7 +410,7 @@ async function say(msg, args, command, curPrefix) {
     // new discordjs V13 type
     if (!userSettings[msg.member.id] || !userSettings[msg.member.id].ttsAccent) {
         var lang = "en-GB"
-    }else{
+    } else {
         var lang = userSettings[msg.member.id].ttsAccent
     }
     const url = googleTTS.getAudioUrl(text, {
@@ -383,17 +465,15 @@ client.on('interactionCreate', async interaction => {
 //                  START OF MISC BUTTON HANDLING
 client.on("interactionCreate", async interaction => {
     if (interaction.customId == "tts-accent-menu") {
-        var accent = interaction.values[0]
+        var accent = interaction.values[0].split(";")[0]
         if (!userSettings[interaction.user.id]) {
             userSettings[interaction.user.id] = {}
         }
         userSettings[interaction.user.id].ttsAccent = accent
-        interaction.channel.send("Your TTS accent is now `" + accent + "`")
-        await fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+        fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
         userSettings = require("./UserSettings.json")
-        var newList = interaction.message.components[0]
-        newList.components[0].disabled = true
-        interaction.update({components: [newList]})
+        var newContent = interaction.message.content.split("\n")[0] + "\n\n<@!" + interaction.user.id + ">'s TTS accent is now: `" + interaction.values[0].split(";")[1] + "`"
+        interaction.update({ content: newContent })
     }
 })
 client.login(env.discord_token)
