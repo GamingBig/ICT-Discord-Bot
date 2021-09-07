@@ -44,7 +44,7 @@ var client = new discord.Client({ intents: myIntents })
 //
 client.on("ready", () => {
     console.log("Logged in as: " + client.user.tag)
-    client.user.setActivity("to bits changing from 0 to 1.", {
+    client.user.setActivity("bits changing from 0 to 1.", {
         type: "LISTENING",
         url: "https://github.com/GamingBig/ICT-Discord-Bot"
     });
