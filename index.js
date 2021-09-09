@@ -368,20 +368,29 @@ client.on("messageCreate", async (msg) => {
     } else /*Urban Dictionary command*/ if (command == "dictionary") {
         var search = args.join(" ")
         ud.define(search, (err, results) => {
-            if (err) { return console.log(err) }
+            if (err) {
+                if (err.message == "No results found") {
+                    msg.channel.send("No results found.")
+                }
+                return console.log(err)
+            }
             var result = results[0]
-            const embed = new discord.MessageEmbed()
-                .setColor('#0099ff')
-                .setTitle('Dictionary definition')
-                .setURL(result.permalink)
-                .setDescription('Highly accurate.')
-                .addFields([
-                    { name: "Word:", value: result.word.charAt(0).toUpperCase() + result.word.substr(1), inline: true },
-                    { name: "Author:", value: result.author, inline: true },
-                    { name: "Definition", value: result.definition.replace(/[\[\]]/g,""), inline: false },
-                    { name: "Example", value: result.example.split("\n")[0].replace(/[\[\]]/g,""), inline: false }
-                ])
-            msg.channel.send({ embeds: [embed] });
+            try {
+                const embed = new discord.MessageEmbed()
+                    .setColor('#0099ff')
+                    .setTitle('Dictionary definition')
+                    .setURL(result.permalink)
+                    .setDescription('Highly accurate.')
+                    .addFields([
+                        { name: "Word:", value: result.word.charAt(0).toUpperCase() + result.word.substr(1), inline: true },
+                        { name: "Author:", value: result.author, inline: true },
+                        { name: "Definition", value: result.definition.replace(/[\[\]]/g, ""), inline: false },
+                        { name: "Example", value: result.example.replace(/[\[\]]/g, ""), inline: false }
+                    ])
+                msg.channel.send({ embeds: [embed] });
+            } catch (err) {
+                msg.channel.send("An error occured: " + err)
+            }
         })
     } else/*Find command the user meant */ {
         /*Voice commands handled seperatly for readability */
