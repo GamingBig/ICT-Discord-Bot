@@ -369,13 +369,17 @@ client.on("messageCreate", async (msg) => {
         var search = args.join(" ")
         ud.define(search, (err, results) => {
             if (err) {
-                if (err.message == "No results found") {
+                if (err.message == "No results found.") {
                     msg.channel.send("No results found.")
+                    return
                 }
                 return console.log(err)
             }
             var result = results[0]
             try {
+                if (result.example.length + result.definition.length > 900) {
+                    return msg.channel.send("Message too long.\n\nPlease go to the page yourself: "+result.permalink)
+                }
                 const embed = new discord.MessageEmbed()
                     .setColor('#0099ff')
                     .setTitle('Dictionary definition')
