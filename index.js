@@ -38,8 +38,8 @@ Object.keys(helpJSON).forEach((value, i) => {
 
 //nieuwe bullshit van discord js v13
 const myIntents = new discord.Intents();
-myIntents.add(discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MEMBERS, discord.Intents.FLAGS.GUILD_VOICE_STATES, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS)
-var client = new discord.Client({ intents: myIntents })
+myIntents.add(discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MEMBERS, discord.Intents.FLAGS.GUILD_VOICE_STATES, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS, discord.Intents.FLAGS.DIRECT_MESSAGES)
+var client = new discord.Client({ intents: myIntents, partials: ["CHANNEL"] })
 
 //
 client.on("ready", () => {
@@ -104,10 +104,14 @@ client.on("messageCreate", async (msg) => {
             userSettings = require("./UserSettings.json")
         }
     }
-    var curPrefix = config.prefix[msg.guildId]
-    if (msg.member.user == client.user && msg.content !== "AUTOMATEDmeme") { return }
-    if (!curPrefix) { config.prefix[msg.guildId] = "!"; fs.writeFileSync("config.json", JSON.stringify(config)); config = require("config.json") }
-    if (msg.content == "AUTOMATEDmeme") { curPrefix = "AUTOMATED"; msg.delete() }
+    if (msg.channel.type !== "DM") {
+        var curPrefix = config.prefix[msg.guildId]
+        if (msg.member.user == client.user && msg.content !== "AUTOMATEDmeme") { return }
+        if (!curPrefix) { config.prefix[msg.guildId] = "!"; fs.writeFileSync("config.json", JSON.stringify(config)); config = require("config.json") }
+        if (msg.content == "AUTOMATEDmeme") { curPrefix = "AUTOMATED"; msg.delete() }
+    } else {
+        var curPrefix = ""
+    }
     if (msg.content.includes("<@!882229344808894484>") || msg.content.includes("@&882229864105672754")) {
         msg.channel.send("Hello. I'm a bot made for the Koning Willem 1 College, ICT Academy.\n\nPrefix for this server is: `" + config.prefix[msg.guildId] + "`.\n\nMy main purpose has not been decided yet, but it will come.")
     }
@@ -117,8 +121,23 @@ client.on("messageCreate", async (msg) => {
     if (config.debug == true) {
         console.log("Request Info:\n    " + msg.content + "\n    " + command + "\n    " + curPrefix + "\n    " + args + "\n")
     }
-    /*start of commands,
-    Help command*/
+    /*start of commands */
+    if (msg.channel.type == "DM") {
+        if (msg.author.id !== "317623563953897473") {
+            return
+        }
+        if (command == "send") {
+            var channel = args[0]
+            var message = args.slice(1).join(" ")
+            try {
+                client.channels.cache.get(channel).send(message)
+            } catch (err) {
+                msg.channel.send("Error: " + err)
+            }
+        }
+        return
+    }
+    /*Help command*/
     if (command.startsWith("help")) {
         var arg2 = args[0]
         if (arg2 == "" || arg2 == undefined) {
@@ -443,9 +462,10 @@ async function say(msg, args, command, curPrefix) {
         var volume = 2.5
     }
     //filter n-word
-    var filter = new Filter({ emptyList: true, list: ["nigga", "nig", "neigha", "niega", "niegha", "neiga", "niger", "nigger"], placeHolder: "\u200B" })
-    var oldText = text
-    text = filter.clean(text.toLowerCase())
+    try {
+        var filter = new Filter({ emptyList: true, list: ["nigga", "nig", "neigha", "niega", "niegha", "neiga", "niger", "nigger"], placeHolder: "\u200B" })
+        text = filter.clean(text.toLowerCase())
+    } catch (err) { console.log(err) }
     // new discordjs V13 type
     if (!userSettings[msg.member.id] || !userSettings[msg.member.id].ttsAccent) {
         var lang = "en-GB"
