@@ -14,6 +14,7 @@ var userSettings = require("./UserSettings.json")
 var toHex = require('colornames')
 const ytdl = require("ytdl-core")
 const mathJS = require('mathjs')
+const ud = require('urban-dictionary')
 var lastMeme = 0
 
 //help command setup
@@ -364,7 +365,25 @@ client.on("messageCreate", async (msg) => {
             console.log(error);
             msg.channel.send("That doesn't math right.")
         }
-    } else /*Find command the user meant */ {
+    } else /*Urban Dictionary command*/ if (command == "dictionary") {
+        var search = args.join(" ")
+        ud.define(search, (err, results) => {
+            if (err) { return console.log(err) }
+            var result = results[0]
+            const embed = new discord.MessageEmbed()
+                .setColor('#0099ff')
+                .setTitle('Dictionary definition')
+                .setURL(result.permalink)
+                .setDescription('Highly accurate.')
+                .addFields([
+                    { name: "Word:", value: result.word.charAt(0).toUpperCase() + result.word.substr(1), inline: true },
+                    { name: "Author:", value: result.author, inline: true },
+                    { name: "Definition", value: result.definition.replace(/[\[\]]/g,""), inline: false },
+                    { name: "Example", value: result.example.split("\n")[0].replace(/[\[\]]/g,""), inline: false }
+                ])
+            msg.channel.send({ embeds: [embed] });
+        })
+    } else/*Find command the user meant */ {
         /*Voice commands handled seperatly for readability */
         if (await voiceCommand(msg, command, curPrefix, args) == true) { return }
         var closestMatch = getClosest.custom(command, commands, compareLevenshteinDistance)

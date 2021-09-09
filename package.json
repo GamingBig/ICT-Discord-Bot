@@ -25,6 +25,7 @@
     "mathjs": "^9.4.4",
     "opusscript": "^0.0.8",
     "tweetnacl": "^1.0.3",
+    "urban-dictionary": "^3.0.2",
     "ytdl-core": "^4.9.1"
   }
 }
