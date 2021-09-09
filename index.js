@@ -209,15 +209,18 @@ client.on("messageCreate", async (msg) => {
             if (userSettings[msg.member.id] && userSettings[msg.member.id].name) {
                 var newName = args.join(" ") + " (" + userSettings[msg.member.id].name + ")"
                 newName = newName.replace(/( \(undefined)\w+/g, "")
+                if (newName.length > 32) { return msg.channel.send("Name needs to be shorter than 33 characters") }
                 await msg.member.setNickname(newName)
                 return msg.channel.send("Your nickname is now: `" + newName + "`")
             }
+            if (args.join(" ") > 32) { return msg.channel.send("Name needs to be shorter than 33 characters") }
             msg.member.setNickname(args.join(" "))
             msg.channel.send("Your nickname is now: `" + args.join(" ") + "`\n\nPlease add your real name to your nickname like this: `XX_SniperKiller_XX (Karel)`.")
             return
         }
         var newName = args.join(" ")
         newName = newName.replace(/( \(undefined)\w+/g, "")
+        if (newName.length > 32) { return msg.channel.send("Name needs to be shorter than 33 characters") }
         await msg.member.setNickname(newName)
         msg.channel.send("Your nickname is now: `" + newName + "`")
         var realName = newName.split("(")[newName.split("(").length - 1].split(")")[0]
@@ -378,7 +381,7 @@ client.on("messageCreate", async (msg) => {
             var result = results[0]
             try {
                 if (result.example.length + result.definition.length > 900) {
-                    return msg.channel.send("Message too long.\n\nPlease go to the page yourself: "+result.permalink)
+                    return msg.channel.send("Message too long.\n\nPlease go to the page yourself: " + result.permalink)
                 }
                 const embed = new discord.MessageEmbed()
                     .setColor('#0099ff')
