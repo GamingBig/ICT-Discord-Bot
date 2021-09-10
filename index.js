@@ -355,6 +355,9 @@ client.on("messageCreate", async (msg) => {
         var request = args.join(" ")
         try {
             var math = mathJS.evaluate(request)
+            if (math.toString().length > 1000) {
+                return msg.channel.send("Response too long.")
+            }
             const embed = new discord.MessageEmbed()
                 .setColor('#0099ff')
                 .setTitle('Math')
