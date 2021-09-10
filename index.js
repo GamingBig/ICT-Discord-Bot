@@ -378,15 +378,14 @@ client.on("messageCreate", async (msg) => {
                 }
                 return console.log(err)
             }
-            var result = results[0]
             try {
+                var result = results[0]
                 if (result.example.length + result.definition.length > 900) {
                     return msg.channel.send("Message too long.\n\nPlease go to the page yourself: " + result.permalink)
                 }
                 const embed = new discord.MessageEmbed()
                     .setColor('#0099ff')
                     .setTitle('Dictionary definition')
-                    .setURL(result.permalink)
                     .setDescription('Highly accurate.')
                     .addFields([
                         { name: "Word:", value: result.word.charAt(0).toUpperCase() + result.word.substr(1), inline: true },
