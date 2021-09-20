@@ -219,11 +219,11 @@ client.on("messageCreate", async (msg) => {
         }
         msg.channel.send("Pong! " + Math.round(Math.abs(curDate - msgDate) / 10) + "ms")
     } else /*Prefix command*/ if (command == "prefix") {
-        if (msg.member.permissions.has(discord.Permissions.FLAGS.ADMINISTRATOR)) {
-            return msg.channel.send("You don't have permission to change the prefix.")
-        }
         if (!args[0]) {
             return msg.channel.send("You did not specify a prefix.\nThe prefix for this server is :`" + curPrefix + "`")
+        }
+        if (!msg.member.permissions.has(discord.Permissions.FLAGS.ADMINISTRATOR)) {
+            return msg.channel.send("You don't have permission to change the prefix.")
         }
         config.prefix[msg.guildId] = args[0]
         fs.writeFileSync("config.json", JSON.stringify(config))
