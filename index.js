@@ -39,7 +39,7 @@ Object.keys(helpJSON).forEach((value, i) => {
 
 //nieuwe bullshit van discord js v13
 const myIntents = new discord.Intents();
-myIntents.add(discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MEMBERS, discord.Intents.FLAGS.GUILD_VOICE_STATES, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS, discord.Intents.FLAGS.DIRECT_MESSAGES)
+myIntents.add(discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MEMBERS, discord.Intents.FLAGS.GUILD_VOICE_STATES, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS, discord.Intents.FLAGS.DIRECT_MESSAGES, discord.Intents.FLAGS.GUILD_INVITES)
 var client = new discord.Client({ intents: myIntents, partials: ["CHANNEL"] })
 
 //
@@ -81,6 +81,42 @@ client.on('guildMemberAdd', (guildMember) => {
         + "\nIf you want you can change your role name or role color use: `" + curPrefix + "role color (either hex color or color name)` and `" + curPrefix + "role name (name)`.\n"
         + "\nHave fun ||and please don't post porn in general, do that in <#882209669043609600>||")
 });
+
+//Send a message in the guild if a user creates an invite
+client.on("inviteCreate", invite => {
+    if (invite.expiresTimestamp == null) {
+        var expiresAt = "Never"
+    } else {
+        var expiresAt = msToTime(invite.expiresTimestamp - Date.now())
+    }
+    if (invite.maxUses == 0) {
+        var maxUses = "No limit"
+    } else {
+        var maxUses = invite.maxUses
+    }
+    const embed = new discord.MessageEmbed()
+        .setColor('#FF1010')
+        .setTitle('Invite Created')
+        .addFields(
+            { name: 'Creator', value: "<@!" + invite.inviter.id + ">", inline: false },
+            { name: 'Expires in', value: expiresAt + "\u200b", inline: false },
+            { name: 'Max uses', value: maxUses + "\u200b", inline: false },
+            { name: 'Temporary membership', value: invite.temporary + "\u200b", inline: false }
+        )
+
+    client.guilds.cache.get(invite.guild.id).systemChannel.send({ embeds: [embed] });
+})
+
+function msToTime(ms) {
+    let seconds = Math.round(ms / 1000);
+    let minutes = Math.round(ms / (1000 * 60));
+    let hours = Math.round(ms / (1000 * 60 * 60));
+    let days = Math.round(ms / (1000 * 60 * 60 * 24));
+    if (seconds < 60) return seconds + " Seconds";
+    else if (minutes < 60) return minutes + " Minutes";
+    else if (hours < 24) return hours + " Hours";
+    else return days + " Days"
+}
 
 //start message handling
 client.on("messageCreate", async (msg) => {
