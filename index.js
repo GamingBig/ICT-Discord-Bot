@@ -15,6 +15,7 @@ var toHex = require('colornames')
 const ytdl = require("ytdl-core")
 const mathJS = require('mathjs')
 const ud = require('urban-dictionary')
+const mc = require("minecraft-server-util")
 var lastMeme = 0
 
 //help command setup
@@ -45,10 +46,16 @@ var client = new discord.Client({ intents: myIntents, partials: ["CHANNEL"] })
 //
 client.on("ready", () => {
     console.log("Logged in as: " + client.user.tag)
-    client.user.setActivity("bits changing from 0 to 1.", {
-        type: "LISTENING",
-        url: "https://github.com/GamingBig/ICT-Discord-Bot"
-    });
+    client.user.setPresence({
+        status: "invisible", activities: {
+            name: "bits changing from 1 to 0.",
+            type: "LISTENING",
+        }
+    })
+    // client.user.setActivity("bits changing from 0 to 1.", {
+    //     type: "LISTENING",
+    //     url: "https://github.com/GamingBig/ICT-Discord-Bot"
+    // });
 })
 
 //leave when other have left
@@ -436,6 +443,22 @@ client.on("messageCreate", async (msg) => {
             } catch (err) {
                 msg.channel.send("An error occured: " + err)
             }
+        })
+    } else /* minecraft server command */ if (command == "mc") {
+        msg.channel.sendTyping()
+        var server = args[0] || "Vizuhfy2.minehut.gg"
+        mc.status(server).then(data => {
+            const embed = new discord.MessageEmbed()
+                .setColor('#0099ff')
+                .setTitle(data.host)
+                .addFields([
+                    { name: 'Description', value: data.description.descriptionText.replace(/(§.)/g, "") + "", inline: false },
+                    { name: 'Players', value: `${data.onlinePlayers}/${data.maxPlayers}`, inline: false },
+                    { name: 'Ping', value: data.roundTripLatency + "ms", inline: false }
+                ])
+            msg.channel.send({ embeds: [embed] });
+        }).catch(reason => {
+            msg.channel.send(reason.toString().split("\n")[0])
         })
     } else/*Find command the user meant */ {
         /*Voice commands handled seperatly for readability */
