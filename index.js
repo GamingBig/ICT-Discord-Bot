@@ -195,7 +195,7 @@ client.on("messageCreate", async (msg) => {
             var defButtonRow = new discord.MessageActionRow().addComponents(defButton)
             var buttonRow = new discord.MessageActionRow()
             for (var key in helpJSON.Catagories) {
-                embed.addField(key, helpJSON.Catagories[key])
+                embed.addField(key + "\u200B", helpJSON.Catagories[key] + "\u200B")
                 var keyButton = new discord.MessageButton()
                     .setCustomId("H-" + key)
                     .setLabel(key)
@@ -600,7 +600,7 @@ client.on('interactionCreate', async interaction => {
         .setColor("#1ecc18")
         .setTitle('Please select a catagory.')
     for (var key in helpJSON.Catagories) {
-        embed2.addField(key, helpJSON.Catagories[key])
+        embed2.addField(key + "\u200B", helpJSON.Catagories[key] + "\u200B")
         var keyButton = new discord.MessageButton()
             .setCustomId("H-" + key)
             .setLabel(key)
