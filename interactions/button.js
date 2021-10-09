@@ -7,7 +7,7 @@ module.exports = {
      * @param {Discord.Interaction} interaction 
      * @param {Array} components
      */
-    execute(client, interaction, components) {
+    async execute(client, interaction, components) {
         /*
             D- = Did you mean
             H- = Help command
@@ -19,17 +19,19 @@ module.exports = {
             var msgId = curId.split(";")[1]
             var channelMsg = interaction.channel.messages.cache.get(msgId)
             var args = channelMsg.content.split(" ").slice(1)
-            //get prefix from prefixes.json
             var curPrefix = require("../misc/prefixes.json")[interaction.guildId]
+
             //get the command that needs to be executed, even if its an alias.
             var curCommand = client.commands.get(command) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(command))
             curCommand.execute(client, channelMsg, args, curPrefix)
+            
             //disable all the buttons on the interaction
             interaction.update({ components: setAllDisabled(components) })
             // this took way too long for 8 lines of code.
         } else /* START OF HELP COMMAND HANDLING */if (curId.startsWith("H-")) {
-            // get the help file
+            // get the help file and prefix
             var helpJSON = require("../misc/help.json")
+            var curPrefix = require("../misc/prefixes.json")[interaction.guildId]
             // get current catagory
             var catagory = helpJSON[curId.substr(2)]
             var embed = new Discord.MessageEmbed()
@@ -41,7 +43,7 @@ module.exports = {
             }
             // get all keys for catagory
             for (var key in catagory) {
-                embed.addField(key, catagory[key])
+                embed.addField(key, catagory[key].replace(/&pref;/g, curPrefix))
             }
             //make all buttons to switch
             var buttonRow = new Discord.MessageActionRow()

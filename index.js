@@ -1,7 +1,9 @@
 const Discord = require('discord.js');
+const disVoice = require("@discordjs/voice")
 var prefixConfig = require("./misc/prefixes.json")
 const keys = require('dotenv').config().parsed
 const stringSimilarity = require("string-similarity")
+const fastAverageColor = require("fast-average-color-node")
 const fs = require('fs');
 
 //to see if prefixconfig has changed
@@ -11,7 +13,7 @@ fs.watchFile("./misc/prefixes.json", (curr, prev) => {
 
 const Intents = Discord.Intents.FLAGS
 var myIntents = new Discord.Intents()
-myIntents.add([Intents.GUILDS, Intents.GUILD_MESSAGES, Intents.GUILD_MEMBERS])
+myIntents.add([Intents.GUILDS, Intents.GUILD_MESSAGES, Intents.GUILD_MEMBERS, Intents.GUILD_VOICE_STATES])
 const client = new Discord.Client({ intents: myIntents });
 client.commands = new Discord.Collection();
 
@@ -35,6 +37,30 @@ client.once('ready', () => {
     console.log('Logged in as ' + client.user.username + "#" + client.user.discriminator + '!');
 });
 
+// On alone in voice
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    if (!oldState.guild.me.voice || !oldState.guild.me.voice.channel) { return }
+    var guild = client.guilds.cache.get(newState.guild.id)
+    var channel = guild.channels.cache.get(oldState.channelId)
+    if (!oldState.channel) { return }
+    if (oldState.channel.members.size > channel.members.size) {
+
+    }
+    var memberArray = channel.members
+    var realMemberArray = []
+    memberArray.map(user => user.user.bot).forEach(element => {
+        if (element == false) {
+            realMemberArray.push(element.user)
+        }
+    })
+    if (realMemberArray.length == 0) {
+        try {
+            disVoice.getVoiceConnection(guild.id).destroy()
+        } catch (error) {
+        }
+    }
+});
+
 // On Message
 client.on('messageCreate', async msg => {
 
@@ -48,19 +74,36 @@ client.on('messageCreate', async msg => {
     }
     
     // See if the message mentions the bot.
-    if (msg.content.includes("<@!" + client.user.id + ">") && msg.author.id !== client.user.id) {
+    if (msg.content === "<@!" + client.user.id + ">" && msg.author.id !== client.user.id) {
         if (msg.content.split(" ")[1]) {
             if (!msg.member.permissions.has("ADMINISTRATOR")) {
                 return msg.channel.send("You need to have Administrator privileges to change the prefix.")
             }
-            var prefix = msg.content.split(" ")[1]
+            let prefix = msg.content.split(" ")[1]
             prefixConfig[msg.guildId] = prefix
             fs.writeFileSync("./misc/prefixes.json", JSON.stringify(prefixConfig))
             return msg.channel.send("Prefix is now: `" + prefix + "`\n\nThis will take effect in about 1-3 seconds.")
         }
-        msg.channel.send("Hello! my prefix for this server is: `" + curPrefix + "`\n" +
-            "You can change the prefix (if you have the permissions to) using: <@!" + client.user.id + ">` yourPrefix` or: `" + curPrefix + "prefix yourPrefix`"
-        )
+        // use the bot image as the embed color
+        // start with changing .webp to .png since fAC doesnt support it
+        let userImg = client.user.displayAvatarURL().split(".")
+        userImg[userImg.length-1] = "png"
+        userImg = userImg.join(".")
+        // get the dominant color
+        color = (await fastAverageColor.getAverageColor(userImg, {algorithm: "dominant"})).hex
+        // make embed with all the info
+        let embed = new Discord.MessageEmbed()
+            .setColor(color)
+            .setTitle('Bot Info')
+            .setThumbnail(userImg)
+            .setDescription("Hello. I'm a bot made for the **Koning Willem 1 College**, ICT Academy.\n\nMy main purpose has not been decided yet, but it will come.")
+            .addFields([
+                { name: 'Current Prefix', value: `\`${curPrefix}\``, inline: false },
+            ])
+            .setFooter("You can only change the prefix if you have the permissions to do so.\n"+
+            "You can do so with `"+ curPrefix +"prefix (New Prefix)` or `@"+client.user.username+" (New Prefix)`.")
+
+        msg.channel.send({embeds: [embed]});
     }
 
     if (!msg.content.startsWith(curPrefix) || msg.author.bot) return;

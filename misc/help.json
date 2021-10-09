@@ -1,9 +1,15 @@
 {
     "Catagories": {
-        "Bot": "Bot commands."
+        "Bot": "Bot commands.",
+        "Voice": "Voice commands."
     },
-    "Bot":{
+    "Bot": {
         "Ping, Uptime": "See the response time and uptime of the bot.",
         "Help": "You're looking at it."
+    },
+    "Voice": {
+        "Join": "Make me join your VC, Usage: `&pref;join @USER` or `&pref;join`",
+        "Leave": "Make me leave the current VC I'm in.",
+        "Say": "Make the bot say something. Usage: `&pref;say (Your message)`\nPlease note that messages **CAN'T** contain `<:` and a custom emoji in the same sentence, on their own their fine to use"
     }
 }
