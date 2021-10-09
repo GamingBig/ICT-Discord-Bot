@@ -1,0 +1,23 @@
+const Discord = require("discord.js")
+
+module.exports = {
+    name: "template",
+    aliases: [],
+    description: "",
+    category: "",
+    guildOnly: false,
+    memberpermissions: "",
+    adminPermOverride: true,
+    cooldown: 0,
+    args: [],
+    usage: "use &pref; to insert a prefix.",
+    /**
+     * @param {Discord.Client} client
+     * @param {Discord.Message} msg
+     * @param {Array} args 
+     * @param {String} curPrefix 
+     */
+    async execute(client, msg, args, curPrefix) {
+
+    },
+};

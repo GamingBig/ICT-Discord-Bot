@@ -1,0 +1,9 @@
+{
+    "Catagories": {
+        "Bot": "Bot commands."
+    },
+    "Bot":{
+        "Ping, Uptime": "See the response time and uptime of the bot.",
+        "Help": "You're looking at it."
+    }
+}
