@@ -81,13 +81,30 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 //give role on join
 client.on('guildMemberAdd', (guildMember) => {
-    guildMember.roles.add(guildMember.guild.roles.cache.find(role => role.name === "Standaard rol"));
+    guildMember.roles.add(guildMember.guild.roles.cache.find(role => role.id == 889432612102373416));
     var curPrefix = config.prefix[guildMember.guild.id]
-    guildMember.guild.systemChannel.send("Welcome " + guildMember.displayName + "!\n"
-        + "\nPlease change your nickname (`" + curPrefix + "nick`) to have your real name be behind your username. (for example: `XX_SniperKiller_XX (Karel)`)\n"
+    guildMember.guild.channels.cache.get("898123345751592970").send("Welcome " + guildMember.displayName + "!\n"
+        + "\nPlease provide us with your real firstname so noone gets confused.\n"
         + "\nIf you want you can change your role name or role color use: `" + curPrefix + "role color (either hex color or color name)` and `" + curPrefix + "role name (name)`.\n"
         + "\nHave fun ||and please don't post porn in general, do that in <#882209669043609600>||")
 });
+
+client.on("messageCreate", async (msg) => {
+    if (msg.member.id == client.user.id) {
+        return
+    }
+    // check if channel is correct and if the user has the correct role.
+    if (msg.channelId !== "898123345751592970" && !msg.member.roles.cache.has("889432612102373416")) return
+    userSettings[msg.member.id] = {}
+    var user = userSettings[msg.member.id]
+    user.name = msg.content
+    fs.writeFileSync("./UserSettings.json", JSON.stringify(userSettings))
+    userSettings = require("./UserSettings.json")
+    var curName = msg.member.nickname ?? msg.member.displayName
+    msg.member.setNickname(curName + " (" + user.name + ")")
+    msg.member.roles.remove(msg.guild.roles.cache.get("889432612102373416"))
+    msg.member.roles.add(msg.guild.roles.cache.get("882355430108561418"))
+})
 
 //Send a message in the guild if a user creates an invite
 client.on("inviteCreate", invite => {
@@ -127,6 +144,7 @@ function msToTime(ms) {
 
 //start message handling
 client.on("messageCreate", async (msg) => {
+    if (msg.channelId == "898123345751592970") return
     var user = msg.member
     if (msg.guildId == "882207507785842738") {
         if (!userSettings[user.id]) {
@@ -219,12 +237,14 @@ client.on("messageCreate", async (msg) => {
         }
         msg.channel.send(embed);
     } else /*Ping command */ if (command.startsWith("ping")) {
-        var curDate = Date.now()
+        var testMsg = await msg.channel.send("Testing ping...")
+        var curDate = testMsg.createdTimestamp
         var msgDate = msg.createdTimestamp
         if (msgDate == 123123) {
-            return msg.channel.send("Because you used the DidYouMeanThis feature, the time will not be accurate.\nPlease retry.")
+            return testMsg.edit("Because you used the DidYouMeanThis feature, the time will not be accurate.\nPlease retry.")
         }
-        msg.channel.send("Pong! " + Math.round(Math.abs(curDate - msgDate) / 10) + "ms")
+        console.log(msgDate, curDate);
+        testMsg.edit("Pong! " + (curDate - msgDate) + "ms")
     } else /*Prefix command*/ if (command == "prefix") {
         if (!args[0]) {
             return msg.channel.send("You did not specify a prefix.\nThe prefix for this server is :`" + curPrefix + "`")
