@@ -468,15 +468,26 @@ client.on("messageCreate", async (msg) => {
         msg.channel.sendTyping()
         var server = args[0] || "Vizuhfy2.minehut.gg"
         mc.status(server).then(data => {
+            var dataUri = data.favicon.replace(/^data:image\/png;base64,/, "")
+            fs.writeFileSync("./mcFavicon.png", dataUri, "base64")
+            var file = new discord.MessageAttachment('./mcFavicon.png')
+            if (data.description.descriptionText.toLowerCase().includes("offline")) {
+                var color = "#ff0000"
+            }else{
+                var color = "#0099ff"
+            }
             const embed = new discord.MessageEmbed()
-                .setColor('#0099ff')
+                .setColor(color)
                 .setTitle(data.host)
+                .setThumbnail("attachment://mcFavicon.png")
                 .addFields([
                     { name: 'Description', value: data.description.descriptionText.replace(/(§.)/g, "") + "", inline: false },
                     { name: 'Players', value: `${data.onlinePlayers}/${data.maxPlayers}`, inline: false },
-                    { name: 'Ping', value: data.roundTripLatency + "ms", inline: false }
+                    { name: 'Ping', value: data.roundTripLatency/2 + "ms", inline: false }
                 ])
-            msg.channel.send({ embeds: [embed] });
+            msg.channel.send({ embeds: [embed], files: [file]}).then(()=>{
+                fs.rmSync("./mcFavicon.png")
+            });
         }).catch(reason => {
             msg.channel.send(reason.toString().split("\n")[0])
         })
