@@ -464,7 +464,7 @@ client.on("messageCreate", async (msg) => {
                 msg.channel.send("An error occured: " + err)
             }
         })
-    } else /* minecraft server command */ if (command == "mc") {
+    } else /* minecraft server command */ if (command == "mc" || command == "fuckmc" || command == "banmc" || command == "removemc") {
         msg.channel.sendTyping()
         var server = args[0] || "Vizuhfy2.minehut.gg"
         mc.status(server).then(data => {
