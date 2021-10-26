@@ -1,5 +1,6 @@
 const Discord = require("discord.js")
 const disVoice = require("@discordjs/voice")
+const twig = require("../Twig")
 
 module.exports = {
 	name: "join",
@@ -37,7 +38,7 @@ module.exports = {
         // join user that sent message
         var vc = msg.member.voice
         if (!vc.channel || !vc.channel.joinable) {
-            return msg.channel.send("I can't join you.")
+            return msg.channel.send({content: "I can't join you.", components: [twig.discordDismissButton]})
         }
         disVoice.joinVoiceChannel({
             channelId: vc.channel.id,

@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const disVoice = require("@discordjs/voice")
 var prefixConfig = require("./misc/prefixes.json")
+var userConfig = require("./misc/userconfig.json")
 const keys = require('dotenv').config().parsed
 const stringSimilarity = require("string-similarity")
 const fastAverageColor = require("fast-average-color-node")
@@ -11,9 +12,13 @@ fs.watchFile("./misc/prefixes.json", (curr, prev) => {
     prefixConfig = require("./misc/prefixes.json")
 })
 
+fs.watchFile("./misc/userconfig.json", (curr, prev) => {
+    userConfig = require("./misc/userconfig.json")
+})
+
 const Intents = Discord.Intents.FLAGS
 var myIntents = new Discord.Intents()
-myIntents.add([Intents.GUILDS, Intents.GUILD_MESSAGES, Intents.GUILD_MEMBERS, Intents.GUILD_VOICE_STATES])
+myIntents.add([Intents.DIRECT_MESSAGES, Intents.GUILDS, Intents.GUILD_MESSAGES, Intents.GUILD_MEMBERS, Intents.GUILD_VOICE_STATES, Intents.GUILD_INVITES])
 const client = new Discord.Client({ intents: myIntents });
 client.commands = new Discord.Collection();
 
@@ -29,12 +34,32 @@ for (const file of commandFiles) {
     });
 }
 
+// set all events
+client.on("inviteCreate", invite => {
+    const inviteCreate = require('./events/inviteCreate');
+    inviteCreate.execute(client, invite)
+})
+client.on("messageCreate", msg => {
+    const RoleInitMsg = require('./events/RoleInitMsg');
+    RoleInitMsg.execute(client, msg)
+})
+client.on("guildMemberAdd", guild => {
+    const guildMemberAdd = require('./events/guildMemberAdd');
+    guildMemberAdd.execute(client, guild)
+})
+
 // Cooldowns
 const cooldowns = new Discord.Collection();
 
 // On Ready
 client.once('ready', () => {
     console.log('Logged in as ' + client.user.username + "#" + client.user.discriminator + '!');
+    client.user.setPresence({
+        status: "dnd", activities: {
+            name: "the instruction of Mr. Wessels.",
+            type: "LISTENING",
+        }
+    })
 });
 
 // On alone in voice
@@ -103,9 +128,25 @@ client.on('messageCreate', async msg => {
             .setFooter("You can only change the prefix if you have the permissions to do so.\n"+
             "You can do so with `"+ curPrefix +"prefix (New Prefix)` or `@"+client.user.username+" (New Prefix)`.")
 
-        msg.channel.send({embeds: [embed]});
+        return msg.channel.send({embeds: [embed]});
     }
 
+    // see if user needs role
+    if (!userConfig[msg.member.id] || !userConfig[msg.member.id].role) {
+        if (msg.member.user.bot) {
+            return
+        }
+        var newRole = await msg.guild.roles.create({
+            name: msg.member.displayName,
+            permissions: []
+        })
+        if (!userConfig[msg.member.id]) {
+            userConfig[msg.member.id] = {}
+        }
+        userConfig[msg.member.id].role = newRole.id
+        msg.member.roles.add(newRole)
+        fs.writeFileSync("./misc/userconfig.json", JSON.stringify(userConfig))
+    }
     if (!msg.content.startsWith(curPrefix) || msg.author.bot) return;
     const args = msg.content.slice(curPrefix.length).split(/ +/);
     const commandName = args.shift().toLowerCase();
@@ -116,13 +157,19 @@ client.on('messageCreate', async msg => {
     if (!command) {
         var closestString = stringSimilarity.findBestMatch(commandName, allCommands).bestMatch
         var customId = "D-" + closestString.target + ";" + msg.id
-        if (closestString.rating == 0 || customId.length >= 100) return msg.channel.send("I didn't recognise that command, Please use " + curPrefix + "help if you don't know what you're looking for.")
+        if (closestString.rating == 0 || customId.length >= 100){
+            return msg.channel.send("I didn't recognise that command, Please use " + curPrefix + "help if you don't know what you're looking for.")
+        }
         var didYouMeanButton = new Discord.MessageButton()
             .setCustomId(customId)
             .setLabel("Yes")
             .setStyle("SUCCESS")
+        var noButton = new Discord.MessageButton()
+            .setCustomId("dismiss")
+            .setLabel("No")
+            .setStyle('DANGER')
         var didYouMeanRow = new Discord.MessageActionRow()
-            .addComponents([didYouMeanButton])
+            .addComponents([didYouMeanButton, noButton])
         msg.channel.send({ content: "Did you mean: ``" + closestString.target.charAt(0).toUpperCase() + closestString.target.slice(1) + "``?", components: [didYouMeanRow] })
         return
     };
@@ -175,15 +222,15 @@ client.on('messageCreate', async msg => {
 
 // On Interaction (Buttons, Menus, slash commands)
 client.on('interactionCreate', async (interaction) => {
-    if (interaction.isButton) {
+    if (interaction.isButton()) {
         var curInterFile = require("./interactions/button.js")
-    } else if (interaction.isCommand) {
+    } else if (interaction.isCommand()) {
         var curInterFile = require("./interactions/slash.js")
-    } else if (interaction.isSelectMenu) {
+    } else if (interaction.isSelectMenu()) {
         var curInterFile = require("./interactions/menu.js")
     }
     try {
-        curInterFile.execute(client, interaction, interaction.message.components)
+        curInterFile.execute(client, interaction, interaction.message.components, cooldowns)
     } catch (error) {
         console.error(error);
         interaction.channel.send('there was an error trying to execute that command!\n\n' + error);

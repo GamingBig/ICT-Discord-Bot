@@ -21,11 +21,12 @@ module.exports = {
 	 */
 	async execute(client, msg, args, curPrefix) {
 		var sayMsg = msg.cleanContent.split(" ").slice(1).join(" ")
-		// Replace emojis with their name, side effect: you cant write <: in your message
-        while (/<:[\w]*:[\w]*>/.test(sayMsg) == true) {
-            sayMsg = sayMsg.replace(/<:([\w]*):([\w]*)>/, sayMsg.split("<:")[1].split(":")[0])
+		// Replace emojis with their name
+		// *Regex explenation, find <: and make sure there is a word after it. continue to ":" then continue to >
+        while (/<:\w.+?:\d+>/.test(sayMsg) == true) {
+			var currentEmoji = /<:\w.+?:\d+>/.exec(sayMsg)[0].substring("2").split(":")[0]
+            sayMsg = sayMsg.replace(/<:[^ ].+?:\d+>/, currentEmoji)
         }
-		console.log("ytttess");
 		if (disVoice.getVoiceConnection(msg.guildId) == undefined) {
 			joinUser(msg)
 		} else {
@@ -48,7 +49,7 @@ module.exports = {
 				sayMsg = sayMsg.replace(string, replacements[string.toLowerCase()])
 			}
 		})
-		var lang = require("../misc/userconfig.json")[msg.member.id] ?? "en"
+		var lang = require("../misc/userconfig.json")[msg.member.id].ttsAccent ?? "en"
 		var URL = googleTTS.getAudioUrl(sayMsg, {
 			lang: lang,
 		})

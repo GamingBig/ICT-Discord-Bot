@@ -1,15 +1,30 @@
 {
     "Catagories": {
         "Bot": "Bot commands.",
+        "Misc": "Misc commands.",
+        "User": "User commands.",
         "Voice": "Voice commands."
     },
     "Bot": {
-        "Ping, Uptime": "See the response time and uptime of the bot.",
-        "Help": "You're looking at it."
+        "Help": "You're looking at it.",
+        "Ping": "See the response time and uptime of the bot.",
+        "Prefix": "Change the server prefix.",
+        "Suggestion": "Allows you to suggest a feature or report a bug directly to the developer (Joery)."
+    },
+    "Misc": {
+        "Dictionary": "Search a word in the higly accurate Urban Dictionary.",
+        "Math": "Let me calculate a math equation for you. Usage: `math 12*13` or `math sqrt(4761)`",
+        "Mc": "See the status of a Minecraft Server. Usage: `mc` (to get vizuhfy2.minehut.gg) or `mc mc.hypixel.net`",
+        "Meme": "Get a random meme from the [instant regret playlist](https://www.youtube.com/playlist?list=PLv3TTBr1W_9u3TaDTrZyW-7UsJQCQzqmP) (2 and 3) totaling 9577 videos"
+    },
+    "User": {
+        "Nick": "Allows you to set your nickname.",
+        "Role": "Allows you to use `role color` to change the color of your role and `role name` to change the name."
     },
     "Voice": {
+        "Accent": "Change the accent of your TTS",
         "Join": "Make me join your VC, Usage: `&pref;join @USER` or `&pref;join`",
         "Leave": "Make me leave the current VC I'm in.",
-        "Say": "Make the bot say something. Usage: `&pref;say (Your message)`\nPlease note that messages **CAN'T** contain `<:` and a custom emoji in the same sentence, on their own their fine to use"
+        "Say": "Make the bot say something. Usage: `&pref;say (Your message)`"
     }
 }
