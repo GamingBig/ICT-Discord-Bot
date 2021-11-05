@@ -55,7 +55,7 @@ const cooldowns = new Discord.Collection();
 client.once('ready', () => {
     console.log('Logged in as ' + client.user.username + "#" + client.user.discriminator + '!');
     client.user.setPresence({
-        status: "dnd", activities: {
+        status: "online", activities: {
             name: "the instruction of Mr. Wessels.",
             type: "LISTENING",
         }
