@@ -83,6 +83,13 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 // On Message
 client.on('messageCreate', async msg => {
+    if (msg.content.includes("https://media.tenor.co/videos/bda209906a9367bffd4bf4b2d1479ab7/mp4")) {
+        try {
+            msg.delete()
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     // Define prefix
     if (!prefixConfig[msg.guildId]) {
@@ -232,4 +239,5 @@ client.on('interactionCreate', async (interaction) => {
     }
 })
 
-client.login(keys.DISCORD_TOKEN);
+var token = keys.DISCORD_TOKEN ?? keys.TEST_DISCORD_TOKEN
+client.login(token);
