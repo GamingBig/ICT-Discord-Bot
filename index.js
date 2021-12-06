@@ -54,7 +54,7 @@ const cooldowns = new Discord.Collection();
 // On Ready
 client.once('ready', () => {
     console.log('Logged in as ' + client.user.username + "#" + client.user.discriminator + '!');
-    client.user.setActivity("Mr. Wessels' instruction.", {type: "LISTENING"})
+    client.user.setActivity("\"guess the amount of times Rob Wessels will repeat a subject.\"\nNow on steam.", {type: "PLAYING"})
 });
 
 // On alone in voice
