@@ -101,7 +101,7 @@ client.on('messageCreate', async msg => {
     }
     
     // See if the message mentions the bot.
-    if (msg.content === "<@!" + client.user.id + ">" && msg.author.id !== client.user.id) {
+    if (msg.content.includes("<@!" + client.user.id + ">") && msg.author.id !== client.user.id) {
         if (msg.content.split(" ")[1]) {
             if (!msg.member.permissions.has("ADMINISTRATOR")) {
                 return msg.channel.send("You need to have Administrator privileges to change the prefix.")

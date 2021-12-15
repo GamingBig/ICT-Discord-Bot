@@ -20,9 +20,37 @@ module.exports = {
 	 * @param {String} curPrefix
 	 */
 	async execute(client, msg, args, curPrefix) {
+		if (fs.existsSync("./misc/botConfig.json")) {
+			var botConfig = require("../misc/botConfig.json")
+		}else{
+			var botConfig = {}
+			fs.writeFileSync("./misc/botConfig.json", JSON.stringify(botConfig))
+		}
+		if (args[0] == "set" && msg.member.permissions.has("ADMINISTRATOR")) {
+			var newIP = args[1]
+			botConfig.McServer = newIP
+			msg.channel.send("Default server IP is now: `"+newIP+"`")
+			fs.writeFileSync("./misc/botConfig.json", JSON.stringify(botConfig))
+			return
+		}
+
+		if (!botConfig.McServer && !args[0]) {
+			var server = "vizuhfy.minehut.gg"
+			botConfig.McServer = "vizuhfy.minehut.gg"
+			fs.writeFileSync("./misc/botConfig.json", JSON.stringify(botConfig))
+		}else if (!args[0]) {
+			var server = botConfig.McServer
+		}else{
+			var server = args[0]
+		}
 		msg.channel.sendTyping()
-		var server = args[0] || "localhost"
-		mc.status(server)
+		if (server.split(":")[1]) {
+			var opts = {port: parseFloat(server.split(":")[1])}
+			server = server.split(":")[0]
+		}else{
+			var opts = {}
+		}
+		mc.status(server, opts)
 			.then((data) => {
 				if (data.favicon) {
 					var dataUri = data.favicon.replace(/^data:image\/png;base64,/, "")
