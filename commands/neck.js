@@ -20,7 +20,7 @@ module.exports = {
     async execute(client, msg, args, curPrefix) {
         var amount = Math.round(parseFloat(args[0]))
 
-        if (amount > 20) {
+        if (amount > 100) {
             return msg.channel.send("Too much")
         }
 
