@@ -40,8 +40,14 @@ module.exports = {
 				} else {
 					var color = toHex(args[1])
 				}
+				if (color == undefined) {
+					msg.channel.send("`" + args[1] + "` is not a valid color, if a color name doesnt work please input a hex code.")
+					return
+				}
 				userRole.setColor(color)
-			} catch {
+				msg.channel.send("The color of your role is now: `"+color+"`");
+			} catch(err) {
+				console.log(err);
 				msg.channel.send("That is not a valid color, if a color name doesnt work please input a hex code.")
 			}
 		} else if (subCommand == "name") {
@@ -49,6 +55,7 @@ module.exports = {
 				var name = args.slice(1, args.length).join(" ")
 				userRole.setName(name)
 				userRole.setHoist(true)
+				msg.channel.send("The name of your role is now `"+name+"`")
 			} catch (error) {
 				console.log(error)
 				msg.channel.send("Something went wrong.")

@@ -47,8 +47,8 @@ module.exports = {
 			const timestamps = cooldowns.get(curCommand.name)
 			const cooldownAmount = (curCommand.cooldown || 3) * 1000
 
-			if (timestamps.has(msg.author.id)) {
-				const expirationTime = timestamps.get(msg.author.id) + cooldownAmount
+			if (timestamps.has(channelMsg.author.id)) {
+				const expirationTime = timestamps.get(channelMsg.author.id) + cooldownAmount
 
 				if (now < expirationTime) {
 					// If user is in cooldown
@@ -60,11 +60,11 @@ module.exports = {
                     return
 				}
 			} else {
-				timestamps.set(msg.author.id, now)
-				setTimeout(() => timestamps.delete(msg.author.id), cooldownAmount)
+				timestamps.set(channelMsg.author.id, now)
+				setTimeout(() => timestamps.delete(channelMsg.author.id), cooldownAmount)
 				// Execute command
 				try {
-					curCommand.execute(client, msg, args, curPrefix)
+					curCommand.execute(client, channelMsg, args, curPrefix)
 				} catch (error) {
 					console.error(error)
 					channelMsg.reply("there was an error trying to execute that command!")
