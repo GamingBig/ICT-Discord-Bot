@@ -28,7 +28,7 @@ module.exports = {
 
         for (let i = 1; i < amount; i++) {
             text += "\n" + "<:Tibo_neck_middle:935280333715288124>"
-            if (text.length > 2000) {
+            if (text.length > 1900) {
                 msg.channel.send(text)
                 text = ""
             }
