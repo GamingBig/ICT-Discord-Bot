@@ -21,6 +21,7 @@
     "libsodium-wrappers": "^0.7.9",
     "mathjs": "^9.5.1",
     "minecraft-server-util": "^3.6.1",
+    "puppeteer": "^13.3.2",
     "save": "^2.4.0",
     "string-similarity": "^4.0.4",
     "urban-dictionary": "^3.0.2",
