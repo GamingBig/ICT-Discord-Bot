@@ -19,6 +19,7 @@ module.exports = {
      */
     async execute (client, msg, args, curPrefix)
     {
+        msg.channel.sendTyping()
         try {
             const browser = await puppeteer.launch();
             const page = await browser.newPage();

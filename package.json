@@ -9,22 +9,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/opus": "^0.5.3",
-    "@discordjs/rest": "^0.1.0-canary.0",
-    "@discordjs/voice": "^0.6.0",
+    "@discordjs/rest": "^0.3.0",
+    "@discordjs/voice": "^0.8.0",
     "colornames": "^1.1.1",
-    "discord-api-types": "^0.23.1",
-    "discord.js": "^13.2.0",
-    "dotenv": "^10.0.0",
-    "fast-average-color-node": "^1.0.3",
+    "discord-api-types": "^0.27.2",
+    "discord.js": "^13.6.0",
+    "dotenv": "^16.0.0",
+    "fast-average-color-node": "^2.1.0",
     "google-tts-api": "^2.0.2",
     "libsodium-wrappers": "^0.7.9",
-    "mathjs": "^9.5.1",
-    "minecraft-server-util": "^3.6.1",
+    "mathjs": "^10.1.1",
+    "minecraft-server-util": "^5.2.9",
     "puppeteer": "^13.3.2",
     "save": "^2.4.0",
     "string-similarity": "^4.0.4",
     "urban-dictionary": "^3.0.2",
-    "ytdl-core": "^4.9.1"
+    "ytdl-core": "^4.10.1"
   }
 }
