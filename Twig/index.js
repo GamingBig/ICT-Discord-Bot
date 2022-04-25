@@ -3,5 +3,8 @@
 */
 
 exports.msToTime = require("./commands/msToTime").execute
+exports.getRandomInt = require("./commands/getRandomInt").execute
+exports.capitalizeFirst = require("./commands/capitalizeFirst").execute
+exports.randomHexColor = require("./commands/randomHexColor").execute
 
-exports.discordDismissButton = require("./commands/discordDismissButton").execute()
+exports.Discord = require("./discord")

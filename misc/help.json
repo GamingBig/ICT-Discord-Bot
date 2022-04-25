@@ -18,7 +18,8 @@
         "Meme": "Get a random meme from the [instant regret playlist](https://www.youtube.com/playlist?list=PLv3TTBr1W_9u3TaDTrZyW-7UsJQCQzqmP) (2 and 3) totaling 9577 videos",
         "Neck": "Neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeck, Usage: &pref;neck (Amount)",
         "Site": "Screenshot a site, Usage: &pref;site https://example.com/",
-        "No": "Create a NO BITCHES? meme but add your own text. Usage: `&pref;no clue`"
+        "No": "Create a NO BITCHES? meme but add your own text. Usage: `&pref;no clue`",
+        "Translate": "Translate any language to Dutch, using google translate. Usage: `&pref;translate I don't speak Dutch.`"
     },
     "User": {
         "Nick": "Allows you to set your nickname.",

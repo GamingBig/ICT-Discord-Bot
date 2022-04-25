@@ -1,0 +1,1 @@
+exports.dismissButton = require("./commands/discord/discordDismissButton").execute()

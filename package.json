@@ -24,6 +24,7 @@
     "puppeteer": "^13.5.2",
     "save": "^2.4.0",
     "string-similarity": "^4.0.4",
+    "translate": "^1.4.1",
     "urban-dictionary": "^3.0.2",
     "ytdl-core": "^4.11.0"
   }
