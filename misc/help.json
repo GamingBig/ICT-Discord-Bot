@@ -19,7 +19,9 @@
         "Neck": "Neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeck, Usage: &pref;neck (Amount)",
         "Site": "Screenshot a site, Usage: &pref;site https://example.com/",
         "No": "Create a NO BITCHES? meme but add your own text. Usage: `&pref;no clue`",
-        "Translate": "Translate any language to Dutch, using google translate. Usage: `&pref;translate I don't speak Dutch.`"
+        "Translate": "Translate any language to Dutch, using google translate. Usage: `&pref;translate I don't speak Dutch.`",
+        "Quote": "Quote a user or yourself. Usage: `&pref;quote` whilst replying to a message or `&pref;quote me`",
+        "ttt": "Quote a user or yourself. Usage: `&pref;quote @user` to battle a user, or `&pref;ttt` to battle the AI"
     },
     "User": {
         "Nick": "Allows you to set your nickname.",

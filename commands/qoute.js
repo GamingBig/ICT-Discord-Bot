@@ -3,7 +3,7 @@ const Discord = require("discord.js");
 
 module.exports = {
     name: "qoute",
-    aliases: [],
+    aliases: ["quote"],
     guildOnly: false,
     memberpermissions: "",
     adminPermOverride: true,
